@@ -1,0 +1,26 @@
+product_id,product_name,category,unit_cost,list_price
+1,ProBook 14,Laptops,780,1199
+2,ProBook 16,Laptops,940,1499
+3,AirLite 13,Laptops,610,999
+4,StudioBook,Laptops,1250,1999
+5,Student Laptop S1,Laptops,280,449
+6,Nova X,Phones,420,799
+7,Nova Mini,Phones,300,549
+8,Nova Pro,Phones,610,1099
+9,Basic Phone B2,Phones,80,149
+10,USB-C Hub,Accessories,18,45
+11,Wireless Mouse,Accessories,12,29
+12,Mechanical Keyboard,Accessories,38,99
+13,Laptop Sleeve,Accessories,9,25
+14,Webcam HD,Accessories,22,59
+15,Charging Dock,Accessories,31,79
+16,View 24,Monitors,110,199
+17,View 27 4K,Monitors,260,449
+18,UltraWide 34,Monitors,420,749
+19,Buds Air,Audio,38,99
+20,Buds Pro,Audio,70,179
+21,Studio Headphones,Audio,120,299
+22,Smart Speaker,Audio,28,79
+23,Office Suite,Software,40,129
+24,Security Pro,Software,22,59
+25,Cloud Backup 1TB,Software,30,99
