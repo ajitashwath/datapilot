@@ -1,0 +1,601 @@
+customer_id,customer_name,segment,country,region,signup_date
+1,Ava Tanaka,Small Business,Singapore,Asia Pacific,2023-12-02
+2,Ethan Patel,Small Business,France,Europe,2023-08-28
+3,Noah Smith,Consumer,Chile,Latin America,2024-04-16
+4,Ava Tanaka,Small Business,Singapore,Asia Pacific,2024-05-14
+5,Liam Lopez,Small Business,Canada,North America,2023-09-27
+6,Emma Dubois,Small Business,Kenya,Middle East & Africa,2022-11-30
+7,Chloe Tanaka,Consumer,India,Asia Pacific,2023-06-24
+8,Priya Garcia,Consumer,India,Asia Pacific,2023-01-18
+9,Emma Patel,Consumer,United States,North America,2023-07-21
+10,Noah Müller,Consumer,Spain,Europe,2024-01-01
+11,Lucas Nguyen,Consumer,Canada,North America,2022-11-29
+12,Mia Ivanov,Consumer,Chile,Latin America,2023-04-01
+13,Elena Ivanov,Small Business,France,Europe,2022-02-11
+14,Liam Lopez,Consumer,Singapore,Asia Pacific,2023-10-25
+15,Arjun Lopez,Small Business,Germany,Europe,2023-03-17
+16,Lucas Lopez,Consumer,United States,North America,2023-02-18
+17,Arjun Garcia,Small Business,United Kingdom,Europe,2023-04-25
+18,Sofia Garcia,Consumer,Canada,North America,2022-07-13
+19,Hans Müller,Consumer,Singapore,Asia Pacific,2023-06-23
+20,Emma Silva,Small Business,France,Europe,2023-11-02
+21,Sofia Garcia,Enterprise,India,Asia Pacific,2022-11-11
+22,Mateo Brown,Consumer,Canada,North America,2022-04-29
+23,Omar Khan,Consumer,Kenya,Middle East & Africa,2022-12-15
+24,Sofia Silva,Small Business,Mexico,Latin America,2022-06-28
+25,Yuki Chen,Small Business,Australia,Asia Pacific,2022-12-03
+26,Liam Patel,Consumer,Canada,North America,2023-07-19
+27,Ethan Chen,Consumer,Germany,Europe,2022-04-13
+28,Liam Brown,Consumer,Canada,North America,2023-11-04
+29,Lucas Khan,Enterprise,United States,North America,2022-07-22
+30,Yuki Nguyen,Consumer,Australia,Asia Pacific,2024-03-16
+31,Omar Müller,Consumer,Singapore,Asia Pacific,2023-10-22
+32,Mateo Rossi,Enterprise,Kenya,Middle East & Africa,2022-09-03
+33,Mateo Rossi,Consumer,Canada,North America,2023-05-22
+34,Liam Nguyen,Consumer,Canada,North America,2022-04-10
+35,Ava Nguyen,Consumer,United Kingdom,Europe,2022-03-31
+36,Ava Chen,Consumer,United States,North America,2024-05-10
+37,Arjun Lopez,Consumer,United States,North America,2023-12-24
+38,Sofia Garcia,Consumer,Germany,Europe,2022-05-19
+39,Emma Ivanov,Small Business,United States,North America,2022-09-12
+40,Omar Garcia,Small Business,Japan,Asia Pacific,2022-06-27
+41,Sofia Patel,Consumer,United Kingdom,Europe,2022-12-22
+42,Noah Brown,Consumer,Singapore,Asia Pacific,2022-09-20
+43,Arjun Chen,Consumer,Singapore,Asia Pacific,2022-10-23
+44,Chloe Rossi,Enterprise,United States,North America,2023-04-22
+45,Ava Tanaka,Consumer,Singapore,Asia Pacific,2022-06-20
+46,Noah Patel,Small Business,Singapore,Asia Pacific,2024-03-05
+47,Priya Dubois,Consumer,Spain,Europe,2023-10-17
+48,Noah Brown,Small Business,United States,North America,2023-11-16
+49,Arjun Ivanov,Consumer,Australia,Asia Pacific,2022-06-02
+50,Omar Müller,Small Business,Canada,North America,2023-09-30
+51,Yuki Silva,Consumer,United States,North America,2024-01-23
+52,Omar Patel,Enterprise,United States,North America,2022-06-07
+53,Lucas Patel,Consumer,Japan,Asia Pacific,2023-11-08
+54,Mia Chen,Small Business,Singapore,Asia Pacific,2022-11-18
+55,Ava Lopez,Small Business,India,Asia Pacific,2023-12-10
+56,Liam Ivanov,Enterprise,Japan,Asia Pacific,2023-03-07
+57,Ava Nguyen,Consumer,Germany,Europe,2023-12-23
+58,Lucas Silva,Consumer,United Kingdom,Europe,2022-05-13
+59,Mia Tanaka,Consumer,Canada,North America,2022-12-17
+60,Ethan Silva,Consumer,Canada,North America,2022-09-04
+61,Sofia Silva,Consumer,Australia,Asia Pacific,2022-08-12
+62,Mateo Tanaka,Enterprise,Spain,Europe,2022-10-05
+63,Lucas Garcia,Enterprise,France,Europe,2022-12-11
+64,Lucas Garcia,Consumer,Singapore,Asia Pacific,2022-04-25
+65,Noah Lopez,Small Business,Germany,Europe,2023-09-29
+66,Liam Tanaka,Small Business,Germany,Europe,2023-05-11
+67,Mateo Lopez,Enterprise,Germany,Europe,2024-01-17
+68,Noah Chen,Consumer,United States,North America,2023-09-27
+69,Lucas Silva,Consumer,Canada,North America,2022-05-15
+70,Hans Chen,Small Business,Germany,Europe,2022-03-04
+71,Noah Patel,Consumer,United States,North America,2023-01-16
+72,Mateo Smith,Consumer,Germany,Europe,2023-03-10
+73,Sofia Garcia,Enterprise,Chile,Latin America,2022-08-05
+74,Noah Ivanov,Enterprise,Canada,North America,2023-12-05
+75,Ava Müller,Enterprise,Canada,North America,2023-06-08
+76,Priya Khan,Small Business,Canada,North America,2023-11-05
+77,Liam Tanaka,Consumer,Canada,North America,2022-04-09
+78,Hans Rossi,Consumer,Singapore,Asia Pacific,2024-01-04
+79,Yuki Silva,Consumer,Germany,Europe,2022-07-05
+80,Chloe Chen,Consumer,Singapore,Asia Pacific,2023-02-08
+81,Mateo Lopez,Consumer,India,Asia Pacific,2023-01-31
+82,Noah Brown,Small Business,United Kingdom,Europe,2024-01-09
+83,Mateo Nguyen,Consumer,Australia,Asia Pacific,2022-09-07
+84,Lucas Tanaka,Small Business,Canada,North America,2022-08-05
+85,Mateo Chen,Consumer,United States,North America,2022-11-02
+86,Mateo Ivanov,Consumer,United States,North America,2022-11-21
+87,Chloe Müller,Consumer,Singapore,Asia Pacific,2022-06-13
+88,Yuki Smith,Consumer,Germany,Europe,2022-06-08
+89,Priya Müller,Small Business,United States,North America,2022-07-28
+90,Ava Brown,Consumer,United Kingdom,Europe,2023-02-25
+91,Chloe Khan,Consumer,United States,North America,2022-11-06
+92,Ava Nguyen,Small Business,Singapore,Asia Pacific,2022-12-19
+93,Chloe Brown,Consumer,France,Europe,2023-10-10
+94,Mateo Chen,Consumer,Germany,Europe,2022-08-05
+95,Emma Ivanov,Consumer,Canada,North America,2024-03-29
+96,Yuki Tanaka,Consumer,United Kingdom,Europe,2023-11-08
+97,Mia Khan,Small Business,United States,North America,2022-06-07
+98,Elena Smith,Consumer,Canada,North America,2022-10-10
+99,Yuki Lopez,Consumer,Canada,North America,2022-06-15
+100,Mia Patel,Consumer,UAE,Middle East & Africa,2022-09-03
+101,Priya Smith,Consumer,Chile,Latin America,2022-11-25
+102,Sofia Tanaka,Consumer,Australia,Asia Pacific,2022-04-28
+103,Elena Garcia,Small Business,Canada,North America,2022-01-13
+104,Sofia Chen,Consumer,Kenya,Middle East & Africa,2023-01-30
+105,Elena Khan,Small Business,India,Asia Pacific,2023-09-23
+106,Ethan Rossi,Consumer,India,Asia Pacific,2022-09-30
+107,Noah Ivanov,Consumer,France,Europe,2024-02-14
+108,Chloe Müller,Consumer,United States,North America,2022-11-29
+109,Sofia Nguyen,Small Business,United States,North America,2024-03-21
+110,Omar Tanaka,Small Business,Chile,Latin America,2022-08-01
+111,Mia Dubois,Consumer,United Kingdom,Europe,2023-05-01
+112,Chloe Khan,Consumer,United States,North America,2023-11-18
+113,Liam Tanaka,Enterprise,Canada,North America,2022-02-23
+114,Arjun Lopez,Consumer,Spain,Europe,2024-04-17
+115,Yuki Müller,Consumer,Canada,North America,2022-11-25
+116,Yuki Chen,Consumer,Brazil,Latin America,2023-03-25
+117,Liam Dubois,Small Business,India,Asia Pacific,2023-07-20
+118,Hans Brown,Small Business,India,Asia Pacific,2023-08-02
+119,Arjun Smith,Consumer,France,Europe,2022-01-22
+120,Hans Tanaka,Enterprise,France,Europe,2024-02-20
+121,Mia Ivanov,Consumer,Germany,Europe,2023-07-16
+122,Omar Nguyen,Consumer,France,Europe,2024-06-17
+123,Mia Lopez,Consumer,Canada,North America,2023-03-01
+124,Ethan Silva,Consumer,Spain,Europe,2023-07-07
+125,Elena Dubois,Consumer,Canada,North America,2023-02-01
+126,Noah Müller,Consumer,Germany,Europe,2024-03-11
+127,Lucas Lopez,Consumer,Canada,North America,2024-01-20
+128,Omar Rossi,Small Business,United States,North America,2024-03-28
+129,Omar Nguyen,Consumer,Canada,North America,2023-03-30
+130,Sofia Rossi,Consumer,France,Europe,2023-12-14
+131,Priya Silva,Small Business,United States,North America,2022-11-19
+132,Noah Nguyen,Small Business,Chile,Latin America,2023-02-19
+133,Arjun Silva,Small Business,France,Europe,2023-11-16
+134,Omar Ivanov,Small Business,Canada,North America,2022-03-15
+135,Lucas Rossi,Small Business,United Kingdom,Europe,2023-10-02
+136,Emma Dubois,Consumer,Canada,North America,2022-01-15
+137,Sofia Müller,Consumer,South Africa,Middle East & Africa,2023-06-07
+138,Omar Rossi,Small Business,France,Europe,2023-03-06
+139,Ethan Tanaka,Consumer,Singapore,Asia Pacific,2023-02-26
+140,Mia Garcia,Consumer,United States,North America,2023-03-21
+141,Mateo Garcia,Consumer,United Kingdom,Europe,2023-03-19
+142,Lucas Dubois,Consumer,Germany,Europe,2023-01-02
+143,Noah Dubois,Consumer,Brazil,Latin America,2023-02-11
+144,Omar Dubois,Consumer,United Kingdom,Europe,2023-05-27
+145,Mia Smith,Small Business,Germany,Europe,2023-11-19
+146,Priya Müller,Enterprise,Canada,North America,2023-05-12
+147,Elena Chen,Consumer,Canada,North America,2023-08-02
+148,Noah Nguyen,Enterprise,United Kingdom,Europe,2024-01-23
+149,Hans Ivanov,Consumer,United Kingdom,Europe,2024-06-09
+150,Elena Patel,Enterprise,Canada,North America,2022-04-08
+151,Priya Dubois,Enterprise,Japan,Asia Pacific,2023-10-04
+152,Noah Garcia,Consumer,Mexico,Latin America,2022-07-22
+153,Mateo Patel,Small Business,United States,North America,2022-06-27
+154,Elena Garcia,Enterprise,Spain,Europe,2023-12-15
+155,Mia Patel,Enterprise,United States,North America,2022-03-03
+156,Mia Dubois,Enterprise,Australia,Asia Pacific,2024-02-03
+157,Priya Ivanov,Consumer,United States,North America,2023-11-25
+158,Omar Chen,Consumer,Japan,Asia Pacific,2024-06-14
+159,Hans Silva,Small Business,Japan,Asia Pacific,2023-08-25
+160,Yuki Dubois,Small Business,Australia,Asia Pacific,2024-02-25
+161,Elena Lopez,Small Business,United States,North America,2022-04-17
+162,Arjun Khan,Consumer,Brazil,Latin America,2024-03-11
+163,Omar Patel,Consumer,United States,North America,2022-05-25
+164,Mia Khan,Consumer,United States,North America,2022-10-10
+165,Liam Müller,Small Business,United Kingdom,Europe,2022-04-26
+166,Omar Lopez,Consumer,United States,North America,2022-12-28
+167,Yuki Rossi,Small Business,Australia,Asia Pacific,2023-11-06
+168,Ethan Dubois,Small Business,Australia,Asia Pacific,2022-08-30
+169,Yuki Smith,Consumer,Canada,North America,2024-01-10
+170,Yuki Rossi,Consumer,South Africa,Middle East & Africa,2023-06-30
+171,Omar Ivanov,Consumer,Canada,North America,2023-07-21
+172,Hans Khan,Enterprise,France,Europe,2024-04-24
+173,Lucas Tanaka,Small Business,United States,North America,2023-01-24
+174,Noah Lopez,Consumer,Mexico,Latin America,2022-11-07
+175,Mateo Brown,Consumer,Canada,North America,2024-06-14
+176,Lucas Müller,Consumer,Canada,North America,2023-05-17
+177,Mateo Silva,Consumer,Spain,Europe,2023-07-08
+178,Omar Tanaka,Enterprise,Kenya,Middle East & Africa,2022-09-24
+179,Ethan Khan,Small Business,Mexico,Latin America,2022-07-13
+180,Mateo Müller,Consumer,India,Asia Pacific,2022-06-02
+181,Elena Patel,Small Business,Chile,Latin America,2022-07-21
+182,Sofia Ivanov,Consumer,Brazil,Latin America,2022-06-25
+183,Hans Ivanov,Small Business,France,Europe,2023-11-04
+184,Lucas Brown,Consumer,Canada,North America,2022-02-22
+185,Priya Lopez,Small Business,Australia,Asia Pacific,2023-07-21
+186,Ava Nguyen,Enterprise,Japan,Asia Pacific,2024-05-04
+187,Hans Nguyen,Consumer,Canada,North America,2023-11-20
+188,Emma Nguyen,Small Business,United States,North America,2022-12-29
+189,Liam Tanaka,Enterprise,Singapore,Asia Pacific,2022-02-23
+190,Chloe Tanaka,Consumer,Canada,North America,2024-01-21
+191,Omar Patel,Consumer,Brazil,Latin America,2022-01-03
+192,Arjun Dubois,Small Business,Canada,North America,2023-09-06
+193,Chloe Müller,Consumer,Canada,North America,2023-08-27
+194,Mia Patel,Consumer,India,Asia Pacific,2022-06-22
+195,Ethan Khan,Consumer,United States,North America,2023-10-28
+196,Lucas Rossi,Small Business,Canada,North America,2022-06-07
+197,Mia Patel,Consumer,United Kingdom,Europe,2022-07-23
+198,Chloe Brown,Consumer,Mexico,Latin America,2024-01-01
+199,Mia Ivanov,Small Business,United States,North America,2024-05-31
+200,Arjun Chen,Consumer,United States,North America,2022-08-27
+201,Lucas Smith,Small Business,Singapore,Asia Pacific,2024-04-09
+202,Ava Müller,Consumer,UAE,Middle East & Africa,2024-04-01
+203,Ethan Brown,Enterprise,France,Europe,2023-11-24
+204,Noah Brown,Small Business,United States,North America,2022-05-07
+205,Emma Garcia,Consumer,United States,North America,2022-09-27
+206,Omar Nguyen,Small Business,United States,North America,2023-09-02
+207,Arjun Garcia,Consumer,United States,North America,2024-06-18
+208,Liam Rossi,Consumer,Singapore,Asia Pacific,2024-01-04
+209,Ethan Lopez,Consumer,United States,North America,2023-01-14
+210,Mia Chen,Small Business,France,Europe,2022-07-31
+211,Hans Chen,Consumer,Japan,Asia Pacific,2024-05-14
+212,Ava Rossi,Consumer,United Kingdom,Europe,2022-09-06
+213,Sofia Khan,Consumer,United States,North America,2022-11-04
+214,Priya Lopez,Consumer,Singapore,Asia Pacific,2024-05-18
+215,Mia Lopez,Consumer,India,Asia Pacific,2023-05-21
+216,Chloe Smith,Consumer,Singapore,Asia Pacific,2022-08-27
+217,Hans Garcia,Consumer,Canada,North America,2022-01-05
+218,Arjun Brown,Consumer,United States,North America,2023-01-22
+219,Emma Patel,Small Business,Chile,Latin America,2024-06-06
+220,Ethan Ivanov,Consumer,France,Europe,2023-01-25
+221,Emma Dubois,Small Business,Canada,North America,2023-09-22
+222,Ethan Garcia,Consumer,Spain,Europe,2022-08-16
+223,Omar Brown,Consumer,India,Asia Pacific,2023-11-30
+224,Arjun Chen,Consumer,Kenya,Middle East & Africa,2023-11-30
+225,Noah Rossi,Consumer,United States,North America,2023-07-02
+226,Yuki Silva,Consumer,Chile,Latin America,2023-11-26
+227,Emma Silva,Small Business,Canada,North America,2023-06-05
+228,Mia Dubois,Consumer,Spain,Europe,2022-12-07
+229,Elena Dubois,Consumer,France,Europe,2023-10-27
+230,Ava Lopez,Consumer,Canada,North America,2024-01-22
+231,Ava Lopez,Consumer,United States,North America,2024-01-27
+232,Ava Silva,Consumer,Germany,Europe,2022-07-11
+233,Liam Garcia,Consumer,UAE,Middle East & Africa,2023-09-01
+234,Chloe Nguyen,Consumer,United Kingdom,Europe,2022-01-04
+235,Liam Lopez,Consumer,Brazil,Latin America,2023-05-30
+236,Lucas Müller,Small Business,Japan,Asia Pacific,2023-05-30
+237,Mia Tanaka,Enterprise,France,Europe,2022-11-24
+238,Noah Rossi,Consumer,India,Asia Pacific,2024-06-13
+239,Emma Smith,Small Business,United States,North America,2024-03-05
+240,Lucas Dubois,Small Business,Canada,North America,2022-02-04
+241,Elena Müller,Consumer,Singapore,Asia Pacific,2022-07-07
+242,Lucas Brown,Small Business,India,Asia Pacific,2022-07-07
+243,Chloe Brown,Small Business,Canada,North America,2024-03-18
+244,Priya Brown,Enterprise,France,Europe,2023-04-13
+245,Priya Rossi,Enterprise,Germany,Europe,2023-10-18
+246,Sofia Müller,Consumer,Brazil,Latin America,2023-12-30
+247,Emma Nguyen,Consumer,Spain,Europe,2023-11-22
+248,Omar Brown,Consumer,Spain,Europe,2022-03-22
+249,Noah Tanaka,Consumer,Canada,North America,2022-05-07
+250,Emma Ivanov,Consumer,Germany,Europe,2022-12-22
+251,Mia Chen,Enterprise,Australia,Asia Pacific,2022-11-01
+252,Arjun Ivanov,Consumer,Brazil,Latin America,2023-11-04
+253,Priya Garcia,Consumer,Germany,Europe,2022-05-21
+254,Lucas Chen,Small Business,United States,North America,2022-12-01
+255,Mia Silva,Consumer,Canada,North America,2022-08-01
+256,Mia Smith,Consumer,Japan,Asia Pacific,2022-06-19
+257,Yuki Smith,Enterprise,Singapore,Asia Pacific,2022-06-05
+258,Emma Smith,Consumer,United States,North America,2022-06-25
+259,Liam Tanaka,Consumer,United States,North America,2023-05-23
+260,Mateo Nguyen,Consumer,United Kingdom,Europe,2023-01-05
+261,Liam Smith,Enterprise,Canada,North America,2023-01-27
+262,Lucas Dubois,Consumer,Australia,Asia Pacific,2023-03-08
+263,Omar Brown,Consumer,United States,North America,2023-10-29
+264,Lucas Chen,Consumer,United States,North America,2024-02-15
+265,Ava Chen,Consumer,Chile,Latin America,2023-04-19
+266,Liam Ivanov,Enterprise,United States,North America,2023-08-02
+267,Mia Brown,Consumer,Canada,North America,2023-10-27
+268,Yuki Silva,Enterprise,United States,North America,2023-09-14
+269,Ethan Brown,Consumer,Canada,North America,2022-05-01
+270,Ava Garcia,Consumer,United States,North America,2024-06-03
+271,Sofia Rossi,Small Business,Canada,North America,2022-05-29
+272,Yuki Nguyen,Consumer,Canada,North America,2023-01-06
+273,Arjun Patel,Consumer,United States,North America,2023-08-11
+274,Lucas Nguyen,Small Business,Germany,Europe,2022-12-30
+275,Emma Silva,Consumer,Singapore,Asia Pacific,2022-08-07
+276,Yuki Nguyen,Consumer,France,Europe,2024-04-11
+277,Omar Tanaka,Enterprise,United States,North America,2022-03-06
+278,Mia Rossi,Consumer,France,Europe,2022-08-10
+279,Sofia Patel,Consumer,Brazil,Latin America,2024-06-12
+280,Chloe Chen,Consumer,Mexico,Latin America,2023-10-19
+281,Chloe Nguyen,Consumer,United States,North America,2022-03-20
+282,Hans Garcia,Consumer,United States,North America,2023-11-11
+283,Elena Garcia,Small Business,United States,North America,2024-05-22
+284,Lucas Chen,Consumer,United States,North America,2022-03-30
+285,Noah Chen,Small Business,France,Europe,2023-01-08
+286,Ava Brown,Consumer,Spain,Europe,2023-02-26
+287,Ava Rossi,Consumer,United States,North America,2022-04-28
+288,Omar Lopez,Consumer,United States,North America,2022-06-30
+289,Mateo Garcia,Small Business,Germany,Europe,2022-06-06
+290,Hans Dubois,Consumer,Canada,North America,2022-06-16
+291,Noah Tanaka,Consumer,Australia,Asia Pacific,2022-12-30
+292,Priya Rossi,Small Business,United States,North America,2023-02-22
+293,Noah Ivanov,Consumer,Brazil,Latin America,2022-08-03
+294,Hans Lopez,Consumer,United States,North America,2022-09-18
+295,Hans Ivanov,Enterprise,Australia,Asia Pacific,2022-06-23
+296,Ethan Chen,Consumer,Mexico,Latin America,2023-12-18
+297,Arjun Patel,Consumer,South Africa,Middle East & Africa,2022-07-10
+298,Ethan Dubois,Consumer,Singapore,Asia Pacific,2024-03-27
+299,Hans Müller,Consumer,Australia,Asia Pacific,2023-04-30
+300,Mia Nguyen,Consumer,Spain,Europe,2023-12-24
+301,Ava Silva,Small Business,India,Asia Pacific,2023-07-27
+302,Omar Silva,Consumer,United States,North America,2022-08-28
+303,Sofia Brown,Small Business,Germany,Europe,2023-06-26
+304,Lucas Dubois,Enterprise,France,Europe,2022-09-04
+305,Ethan Smith,Small Business,Mexico,Latin America,2022-04-17
+306,Yuki Smith,Small Business,Germany,Europe,2022-08-18
+307,Priya Khan,Small Business,Spain,Europe,2022-09-06
+308,Lucas Tanaka,Enterprise,France,Europe,2022-05-02
+309,Arjun Patel,Consumer,Canada,North America,2022-01-22
+310,Mia Rossi,Consumer,Canada,North America,2024-04-29
+311,Mia Nguyen,Consumer,France,Europe,2023-04-08
+312,Liam Brown,Consumer,Germany,Europe,2022-12-28
+313,Lucas Silva,Consumer,Canada,North America,2024-04-16
+314,Noah Rossi,Small Business,United States,North America,2022-07-22
+315,Elena Patel,Consumer,United States,North America,2022-12-29
+316,Noah Silva,Enterprise,Canada,North America,2024-02-02
+317,Noah Müller,Consumer,United States,North America,2023-07-23
+318,Ethan Silva,Consumer,Japan,Asia Pacific,2022-12-26
+319,Chloe Dubois,Consumer,United States,North America,2022-08-19
+320,Mateo Smith,Consumer,Mexico,Latin America,2022-02-01
+321,Lucas Smith,Consumer,Chile,Latin America,2022-03-18
+322,Ava Chen,Consumer,United Kingdom,Europe,2022-05-26
+323,Arjun Ivanov,Consumer,United States,North America,2023-12-09
+324,Elena Dubois,Consumer,Germany,Europe,2023-07-30
+325,Elena Chen,Consumer,India,Asia Pacific,2023-01-26
+326,Mateo Ivanov,Consumer,Japan,Asia Pacific,2023-12-06
+327,Liam Tanaka,Consumer,Australia,Asia Pacific,2022-05-25
+328,Mateo Tanaka,Consumer,Germany,Europe,2022-07-09
+329,Mateo Lopez,Consumer,Germany,Europe,2022-12-20
+330,Ethan Smith,Consumer,Canada,North America,2024-04-05
+331,Lucas Patel,Consumer,Japan,Asia Pacific,2023-07-07
+332,Ethan Khan,Small Business,United States,North America,2024-02-05
+333,Ethan Chen,Enterprise,Singapore,Asia Pacific,2022-08-12
+334,Mia Dubois,Enterprise,Brazil,Latin America,2024-02-03
+335,Ava Chen,Consumer,Canada,North America,2022-03-07
+336,Priya Garcia,Consumer,Germany,Europe,2022-07-24
+337,Sofia Chen,Consumer,United States,North America,2023-04-16
+338,Liam Rossi,Small Business,Japan,Asia Pacific,2022-02-15
+339,Yuki Chen,Small Business,Canada,North America,2024-02-12
+340,Liam Garcia,Small Business,Mexico,Latin America,2024-02-20
+341,Chloe Ivanov,Small Business,United States,North America,2023-05-03
+342,Noah Müller,Consumer,UAE,Middle East & Africa,2022-10-03
+343,Lucas Rossi,Small Business,Japan,Asia Pacific,2022-03-31
+344,Emma Smith,Small Business,United Kingdom,Europe,2023-07-12
+345,Yuki Rossi,Consumer,Japan,Asia Pacific,2023-04-29
+346,Lucas Patel,Enterprise,India,Asia Pacific,2023-11-15
+347,Priya Khan,Consumer,Chile,Latin America,2023-06-27
+348,Sofia Chen,Enterprise,Canada,North America,2022-04-26
+349,Elena Ivanov,Small Business,France,Europe,2022-04-20
+350,Ava Lopez,Consumer,United States,North America,2023-12-04
+351,Omar Garcia,Small Business,France,Europe,2022-05-24
+352,Elena Garcia,Consumer,Canada,North America,2024-04-24
+353,Ava Garcia,Small Business,United Kingdom,Europe,2022-04-06
+354,Ethan Khan,Small Business,United Kingdom,Europe,2023-10-18
+355,Sofia Garcia,Small Business,France,Europe,2024-05-27
+356,Emma Brown,Small Business,Germany,Europe,2023-02-02
+357,Hans Nguyen,Consumer,Singapore,Asia Pacific,2022-02-21
+358,Liam Brown,Consumer,Singapore,Asia Pacific,2024-02-29
+359,Omar Silva,Consumer,Spain,Europe,2022-06-18
+360,Noah Lopez,Consumer,Spain,Europe,2023-04-20
+361,Ethan Smith,Consumer,Brazil,Latin America,2024-06-05
+362,Emma Rossi,Consumer,United States,North America,2023-11-02
+363,Ava Müller,Consumer,United States,North America,2022-02-11
+364,Ethan Lopez,Consumer,Canada,North America,2024-01-09
+365,Liam Khan,Small Business,India,Asia Pacific,2022-05-26
+366,Priya Brown,Consumer,France,Europe,2023-11-06
+367,Priya Chen,Small Business,Singapore,Asia Pacific,2023-07-13
+368,Elena Lopez,Consumer,India,Asia Pacific,2022-09-17
+369,Lucas Tanaka,Consumer,Canada,North America,2023-01-17
+370,Yuki Tanaka,Consumer,Chile,Latin America,2022-04-17
+371,Mia Lopez,Consumer,Japan,Asia Pacific,2024-06-07
+372,Hans Rossi,Consumer,United States,North America,2022-08-03
+373,Elena Rossi,Consumer,Canada,North America,2022-10-05
+374,Elena Khan,Consumer,Canada,North America,2023-03-29
+375,Ethan Garcia,Consumer,United States,North America,2023-08-29
+376,Chloe Müller,Consumer,United States,North America,2023-03-31
+377,Emma Chen,Consumer,Mexico,Latin America,2023-03-31
+378,Hans Garcia,Small Business,Spain,Europe,2023-06-09
+379,Elena Ivanov,Consumer,Germany,Europe,2024-02-11
+380,Ava Khan,Enterprise,India,Asia Pacific,2022-12-22
+381,Arjun Rossi,Small Business,France,Europe,2024-01-19
+382,Chloe Rossi,Enterprise,Brazil,Latin America,2023-12-10
+383,Ethan Tanaka,Small Business,India,Asia Pacific,2024-05-14
+384,Elena Khan,Consumer,France,Europe,2024-04-01
+385,Sofia Ivanov,Consumer,Canada,North America,2023-12-20
+386,Elena Lopez,Consumer,UAE,Middle East & Africa,2022-08-11
+387,Omar Rossi,Small Business,Singapore,Asia Pacific,2023-11-28
+388,Elena Müller,Consumer,UAE,Middle East & Africa,2023-10-25
+389,Mia Tanaka,Consumer,Canada,North America,2022-09-18
+390,Hans Silva,Enterprise,Brazil,Latin America,2023-09-03
+391,Sofia Tanaka,Consumer,United Kingdom,Europe,2022-08-16
+392,Mia Dubois,Consumer,United States,North America,2023-04-16
+393,Lucas Silva,Small Business,France,Europe,2023-12-19
+394,Lucas Müller,Consumer,Japan,Asia Pacific,2022-06-19
+395,Hans Müller,Consumer,Canada,North America,2022-10-31
+396,Liam Rossi,Small Business,Germany,Europe,2023-12-17
+397,Yuki Garcia,Consumer,India,Asia Pacific,2023-02-13
+398,Mia Chen,Consumer,Canada,North America,2024-05-14
+399,Yuki Nguyen,Consumer,Spain,Europe,2022-01-08
+400,Hans Rossi,Small Business,United Kingdom,Europe,2023-10-12
+401,Mateo Patel,Consumer,United States,North America,2024-01-03
+402,Elena Silva,Enterprise,Chile,Latin America,2024-04-06
+403,Elena Nguyen,Small Business,Singapore,Asia Pacific,2022-05-22
+404,Yuki Patel,Consumer,United States,North America,2024-06-04
+405,Yuki Brown,Consumer,UAE,Middle East & Africa,2022-12-20
+406,Hans Ivanov,Consumer,Chile,Latin America,2022-11-13
+407,Noah Khan,Small Business,United States,North America,2022-11-16
+408,Liam Dubois,Consumer,India,Asia Pacific,2023-07-29
+409,Hans Smith,Consumer,United States,North America,2023-08-17
+410,Chloe Lopez,Consumer,UAE,Middle East & Africa,2023-03-03
+411,Mateo Rossi,Enterprise,Singapore,Asia Pacific,2022-03-05
+412,Liam Ivanov,Consumer,Japan,Asia Pacific,2024-06-06
+413,Priya Khan,Small Business,Canada,North America,2022-07-19
+414,Hans Smith,Consumer,Chile,Latin America,2022-03-26
+415,Arjun Smith,Enterprise,United States,North America,2023-06-22
+416,Priya Dubois,Consumer,United States,North America,2023-01-07
+417,Priya Silva,Consumer,Canada,North America,2023-07-09
+418,Liam Smith,Enterprise,India,Asia Pacific,2024-02-27
+419,Lucas Nguyen,Enterprise,United States,North America,2022-03-29
+420,Noah Brown,Consumer,Chile,Latin America,2022-09-13
+421,Emma Tanaka,Consumer,Australia,Asia Pacific,2023-04-10
+422,Emma Tanaka,Consumer,United States,North America,2023-12-11
+423,Ethan Smith,Consumer,Canada,North America,2023-06-25
+424,Arjun Brown,Consumer,United States,North America,2022-12-11
+425,Priya Müller,Small Business,United Kingdom,Europe,2023-07-04
+426,Priya Ivanov,Consumer,Singapore,Asia Pacific,2024-05-31
+427,Hans Rossi,Small Business,Canada,North America,2023-03-09
+428,Mateo Silva,Consumer,India,Asia Pacific,2024-03-06
+429,Ava Patel,Consumer,United States,North America,2023-12-03
+430,Chloe Chen,Small Business,Japan,Asia Pacific,2022-09-29
+431,Sofia Nguyen,Consumer,Mexico,Latin America,2022-08-13
+432,Noah Tanaka,Small Business,Singapore,Asia Pacific,2023-11-25
+433,Emma Silva,Consumer,Japan,Asia Pacific,2022-07-06
+434,Emma Lopez,Enterprise,Singapore,Asia Pacific,2022-10-31
+435,Liam Lopez,Small Business,United States,North America,2022-07-31
+436,Elena Brown,Small Business,Canada,North America,2023-06-30
+437,Mateo Chen,Consumer,United States,North America,2022-09-22
+438,Priya Khan,Consumer,United Kingdom,Europe,2023-08-16
+439,Hans Ivanov,Consumer,Japan,Asia Pacific,2024-04-21
+440,Arjun Rossi,Consumer,France,Europe,2024-01-17
+441,Liam Garcia,Consumer,Chile,Latin America,2024-05-03
+442,Sofia Brown,Consumer,United States,North America,2022-01-23
+443,Yuki Tanaka,Consumer,Australia,Asia Pacific,2023-02-14
+444,Emma Silva,Consumer,Canada,North America,2022-07-18
+445,Chloe Lopez,Consumer,United States,North America,2024-04-06
+446,Omar Khan,Consumer,Australia,Asia Pacific,2023-10-03
+447,Priya Rossi,Consumer,South Africa,Middle East & Africa,2022-10-16
+448,Priya Rossi,Small Business,United Kingdom,Europe,2023-05-23
+449,Noah Rossi,Consumer,Canada,North America,2023-06-29
+450,Noah Garcia,Consumer,Spain,Europe,2023-03-23
+451,Priya Brown,Consumer,United States,North America,2023-03-03
+452,Emma Brown,Small Business,Brazil,Latin America,2022-02-19
+453,Liam Patel,Consumer,Japan,Asia Pacific,2023-02-12
+454,Omar Müller,Consumer,Canada,North America,2022-11-10
+455,Omar Ivanov,Enterprise,United States,North America,2024-01-07
+456,Liam Smith,Consumer,United States,North America,2024-02-18
+457,Hans Silva,Enterprise,Kenya,Middle East & Africa,2023-11-07
+458,Yuki Tanaka,Small Business,Spain,Europe,2022-01-28
+459,Sofia Dubois,Consumer,Singapore,Asia Pacific,2024-01-28
+460,Arjun Chen,Consumer,France,Europe,2022-12-23
+461,Chloe Dubois,Small Business,United Kingdom,Europe,2023-01-10
+462,Liam Rossi,Enterprise,Canada,North America,2024-04-30
+463,Elena Khan,Consumer,Brazil,Latin America,2024-02-20
+464,Noah Smith,Consumer,Canada,North America,2022-02-15
+465,Arjun Tanaka,Consumer,United Kingdom,Europe,2022-11-20
+466,Hans Silva,Consumer,Australia,Asia Pacific,2023-11-06
+467,Priya Patel,Small Business,Spain,Europe,2023-04-30
+468,Ethan Garcia,Consumer,Chile,Latin America,2022-08-20
+469,Arjun Chen,Small Business,Canada,North America,2023-04-18
+470,Ethan Müller,Small Business,United Kingdom,Europe,2024-02-19
+471,Noah Garcia,Small Business,Spain,Europe,2022-07-20
+472,Yuki Lopez,Small Business,United Kingdom,Europe,2023-11-03
+473,Emma Rossi,Small Business,United States,North America,2023-10-24
+474,Emma Brown,Small Business,Canada,North America,2024-03-08
+475,Sofia Lopez,Small Business,Canada,North America,2022-09-26
+476,Emma Garcia,Consumer,Canada,North America,2022-07-14
+477,Arjun Dubois,Consumer,Germany,Europe,2023-05-08
+478,Hans Ivanov,Consumer,France,Europe,2023-04-24
+479,Priya Khan,Small Business,Spain,Europe,2023-01-04
+480,Lucas Tanaka,Small Business,United Kingdom,Europe,2023-12-03
+481,Noah Tanaka,Consumer,Spain,Europe,2023-12-21
+482,Lucas Smith,Consumer,United States,North America,2022-08-10
+483,Emma Silva,Consumer,Germany,Europe,2023-12-17
+484,Lucas Lopez,Small Business,Canada,North America,2022-07-27
+485,Ethan Lopez,Consumer,United States,North America,2023-01-02
+486,Chloe Smith,Consumer,United Kingdom,Europe,2022-01-25
+487,Emma Dubois,Small Business,France,Europe,2022-11-03
+488,Yuki Müller,Small Business,United States,North America,2024-05-12
+489,Yuki Ivanov,Consumer,Spain,Europe,2023-02-03
+490,Sofia Smith,Consumer,Germany,Europe,2023-10-02
+491,Mia Lopez,Enterprise,Singapore,Asia Pacific,2022-04-08
+492,Elena Brown,Small Business,Spain,Europe,2023-07-27
+493,Priya Garcia,Small Business,India,Asia Pacific,2022-12-01
+494,Mia Smith,Consumer,United States,North America,2023-11-01
+495,Ava Brown,Consumer,Japan,Asia Pacific,2024-04-15
+496,Priya Chen,Consumer,United Kingdom,Europe,2023-04-24
+497,Omar Silva,Small Business,France,Europe,2022-04-03
+498,Liam Ivanov,Consumer,Germany,Europe,2023-03-05
+499,Mateo Silva,Consumer,United States,North America,2022-04-21
+500,Omar Rossi,Small Business,Spain,Europe,2023-02-09
+501,Elena Tanaka,Enterprise,Australia,Asia Pacific,2022-02-25
+502,Hans Smith,Small Business,Brazil,Latin America,2023-07-31
+503,Noah Lopez,Consumer,Chile,Latin America,2022-10-07
+504,Mia Müller,Consumer,Germany,Europe,2022-07-01
+505,Elena Chen,Consumer,Spain,Europe,2022-01-16
+506,Yuki Müller,Consumer,Singapore,Asia Pacific,2024-03-10
+507,Emma Lopez,Consumer,Canada,North America,2024-01-24
+508,Emma Garcia,Consumer,Singapore,Asia Pacific,2024-01-01
+509,Chloe Ivanov,Consumer,Germany,Europe,2022-02-22
+510,Noah Dubois,Small Business,United States,North America,2022-11-11
+511,Yuki Brown,Enterprise,United States,North America,2024-05-24
+512,Noah Lopez,Consumer,Australia,Asia Pacific,2023-06-05
+513,Arjun Brown,Consumer,Canada,North America,2022-04-26
+514,Lucas Lopez,Consumer,Canada,North America,2022-05-07
+515,Chloe Garcia,Consumer,Canada,North America,2022-08-25
+516,Priya Brown,Consumer,Canada,North America,2024-05-25
+517,Mia Silva,Consumer,Canada,North America,2022-06-02
+518,Sofia Silva,Small Business,Australia,Asia Pacific,2024-03-23
+519,Hans Ivanov,Consumer,United States,North America,2023-09-03
+520,Emma Lopez,Enterprise,India,Asia Pacific,2024-04-09
+521,Ethan Dubois,Consumer,Brazil,Latin America,2024-01-14
+522,Elena Tanaka,Consumer,Canada,North America,2022-10-26
+523,Ethan Tanaka,Consumer,Canada,North America,2024-01-16
+524,Mateo Rossi,Consumer,United Kingdom,Europe,2022-06-02
+525,Mia Rossi,Consumer,Canada,North America,2022-09-19
+526,Emma Rossi,Enterprise,Canada,North America,2022-07-10
+527,Liam Garcia,Consumer,Kenya,Middle East & Africa,2022-04-30
+528,Omar Garcia,Consumer,South Africa,Middle East & Africa,2022-03-23
+529,Arjun Nguyen,Consumer,Australia,Asia Pacific,2022-06-18
+530,Omar Tanaka,Consumer,United States,North America,2022-04-19
+531,Emma Lopez,Consumer,Singapore,Asia Pacific,2022-12-09
+532,Mateo Khan,Consumer,Singapore,Asia Pacific,2022-03-06
+533,Liam Smith,Small Business,United Kingdom,Europe,2022-02-25
+534,Lucas Chen,Consumer,Spain,Europe,2024-06-09
+535,Mateo Chen,Consumer,Canada,North America,2022-03-20
+536,Mia Lopez,Small Business,Canada,North America,2022-03-08
+537,Mateo Patel,Small Business,United Kingdom,Europe,2022-01-28
+538,Sofia Silva,Consumer,United States,North America,2022-04-30
+539,Chloe Lopez,Consumer,United States,North America,2023-04-21
+540,Mateo Lopez,Consumer,Japan,Asia Pacific,2024-01-15
+541,Ava Patel,Consumer,South Africa,Middle East & Africa,2023-10-24
+542,Arjun Smith,Consumer,United Kingdom,Europe,2023-06-07
+543,Lucas Chen,Small Business,Australia,Asia Pacific,2022-03-18
+544,Priya Smith,Consumer,UAE,Middle East & Africa,2023-11-28
+545,Noah Chen,Small Business,United States,North America,2022-02-03
+546,Noah Silva,Consumer,Spain,Europe,2023-07-22
+547,Lucas Ivanov,Small Business,Spain,Europe,2023-01-04
+548,Mia Silva,Small Business,United States,North America,2024-03-04
+549,Chloe Khan,Consumer,Singapore,Asia Pacific,2022-10-04
+550,Elena Chen,Consumer,United Kingdom,Europe,2023-07-29
+551,Yuki Brown,Consumer,Spain,Europe,2023-01-31
+552,Mateo Khan,Small Business,Canada,North America,2023-04-15
+553,Chloe Ivanov,Consumer,Canada,North America,2024-04-24
+554,Arjun Lopez,Consumer,Mexico,Latin America,2023-10-04
+555,Noah Müller,Consumer,Canada,North America,2023-01-09
+556,Liam Garcia,Small Business,United States,North America,2023-02-07
+557,Ethan Patel,Consumer,United States,North America,2023-09-27
+558,Sofia Tanaka,Consumer,United Kingdom,Europe,2022-11-08
+559,Arjun Lopez,Enterprise,United Kingdom,Europe,2022-06-01
+560,Mateo Rossi,Consumer,United Kingdom,Europe,2023-02-25
+561,Lucas Nguyen,Small Business,United States,North America,2022-03-03
+562,Liam Silva,Consumer,United States,North America,2022-06-02
+563,Sofia Chen,Consumer,Japan,Asia Pacific,2023-01-14
+564,Arjun Müller,Small Business,United Kingdom,Europe,2023-12-18
+565,Noah Dubois,Small Business,United Kingdom,Europe,2023-12-05
+566,Noah Dubois,Small Business,Singapore,Asia Pacific,2022-08-23
+567,Noah Tanaka,Consumer,India,Asia Pacific,2023-01-15
+568,Elena Patel,Consumer,United States,North America,2022-05-19
+569,Elena Nguyen,Consumer,United States,North America,2023-11-11
+570,Priya Chen,Consumer,Germany,Europe,2022-08-10
+571,Omar Lopez,Consumer,United States,North America,2023-12-21
+572,Elena Chen,Consumer,Australia,Asia Pacific,2024-01-28
+573,Mateo Garcia,Consumer,France,Europe,2023-09-13
+574,Arjun Tanaka,Consumer,Australia,Asia Pacific,2022-10-25
+575,Yuki Silva,Consumer,Chile,Latin America,2024-05-07
+576,Ava Silva,Consumer,Germany,Europe,2023-09-10
+577,Priya Tanaka,Small Business,Brazil,Latin America,2023-08-05
+578,Mia Lopez,Small Business,Germany,Europe,2024-02-10
+579,Liam Tanaka,Consumer,Brazil,Latin America,2024-03-04
+580,Yuki Tanaka,Small Business,Canada,North America,2022-03-11
+581,Priya Rossi,Small Business,Germany,Europe,2024-03-04
+582,Hans Smith,Consumer,France,Europe,2023-11-20
+583,Omar Khan,Consumer,United States,North America,2022-07-05
+584,Emma Patel,Consumer,Spain,Europe,2022-10-04
+585,Omar Khan,Consumer,Chile,Latin America,2023-11-09
+586,Arjun Smith,Small Business,Germany,Europe,2022-07-14
+587,Arjun Lopez,Enterprise,United States,North America,2023-02-12
+588,Ava Tanaka,Consumer,United States,North America,2023-09-13
+589,Ethan Ivanov,Small Business,United States,North America,2023-08-09
+590,Mia Tanaka,Consumer,Canada,North America,2024-03-29
+591,Omar Smith,Consumer,Mexico,Latin America,2022-04-11
+592,Elena Brown,Small Business,Spain,Europe,2022-09-23
+593,Omar Dubois,Consumer,United States,North America,2024-06-05
+594,Omar Nguyen,Consumer,France,Europe,2023-05-27
+595,Priya Rossi,Consumer,United States,North America,2022-08-12
+596,Ethan Khan,Enterprise,United States,North America,2022-09-18
+597,Emma Brown,Consumer,Singapore,Asia Pacific,2022-11-02
+598,Elena Khan,Consumer,Germany,Europe,2023-05-14
+599,Mia Müller,Consumer,South Africa,Middle East & Africa,2022-09-14
+600,Sofia Dubois,Consumer,United Kingdom,Europe,2023-07-14
