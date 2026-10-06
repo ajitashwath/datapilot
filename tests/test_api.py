@@ -33,7 +33,7 @@ def llm():
 
 @pytest.fixture
 def client(settings, llm):
-    with TestClient(create_app(settings, lambda s: llm), raise_server_exceptions=False) as c:
+    with TestClient(create_app(settings, lambda s, o=None: llm), raise_server_exceptions=False) as c:
         yield c
 
 
@@ -143,7 +143,7 @@ def test_chat_unexpected_failure_is_sanitised(client, sid, llm):
             raise RuntimeError("secret stack detail")
             yield
 
-    client.app.state.llm_factory = lambda s: Exploding()
+    client.app.state.llm_factory = lambda s, o=None: Exploding()
     events = parse_sse(client.post(f"/api/sessions/{sid}/chat", json={"message": "hi"}).text)
     assert events[-1]["type"] == "error" and "secret" not in events[-1]["message"]
 

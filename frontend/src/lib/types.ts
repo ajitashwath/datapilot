@@ -55,6 +55,7 @@ export interface SessionState {
   relationships: Relationship[];
   filters: Record<string, string>;
   active_dataset: string | null;
+  llm: { provider: string; model: string } | null;
 }
 
 export interface QualityIssue {
@@ -127,7 +128,9 @@ export interface Overview {
 
 export interface AppConfig {
   llm_configured: boolean;
+  provider: string;
   model: string;
+  default_models: Record<string, string>;
   max_upload_mb: number;
   max_files_per_session: number;
   sql_timeout_seconds: number;

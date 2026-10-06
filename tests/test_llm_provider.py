@@ -2,7 +2,7 @@ import anthropic
 import pytest
 
 from app.agent.agent import ErrorEvent, TextEvent, run_turn
-from app.agent.llm import AnthropicProvider, LLMError, Message, TextDelta, ToolCall, ToolResultMessage, ToolUse
+from app.agent.llm import AnthropicProvider, LLMConfig, LLMError, create_provider, Message, TextDelta, ToolCall, ToolResultMessage, ToolUse
 from app.agent.tools import tool_specs
 from fakes import ScriptedLLM
 
@@ -36,8 +36,12 @@ class FakeClient:
         return self.stream_obj
 
 
+def anthropic_config() -> LLMConfig:
+    return LLMConfig(provider="anthropic", api_key="sk-ant-test-key")
+
+
 def provider_with(settings, client) -> AnthropicProvider:
-    provider = AnthropicProvider(settings)
+    provider = AnthropicProvider(anthropic_config(), settings.llm_max_tokens)
     provider.client = client
     return provider
 
@@ -49,12 +53,12 @@ def tool_block(call_id, name, payload):
 def test_missing_api_key_gives_clear_error(settings):
     settings.anthropic_api_key = ""
     with pytest.raises(LLMError) as exc:
-        AnthropicProvider(settings)
-    assert "ANTHROPIC_API_KEY" in exc.value.message
+        create_provider(settings)
+    assert "Settings" in exc.value.message
 
 
 def test_messages_are_converted_to_anthropic_format(settings):
-    provider = AnthropicProvider(settings)
+    provider = AnthropicProvider(anthropic_config(), settings.llm_max_tokens)
     converted = provider.convert([
         Message(role="user", text="q"),
         Message(role="assistant", text="", tool_calls=[ToolCall(id="a", name="get_schema", input={}), ToolCall(id="b", name="get_schema", input={})]),
@@ -76,7 +80,7 @@ def test_stream_yields_text_then_tool_use_and_sends_tools(settings):
     tool_use = [i for i in items if isinstance(i, ToolUse)][0]
     assert tool_use.call.name == "execute_sql" and tool_use.call.input == {"query": "SELECT 1"}
     sent = client.calls[0]
-    assert sent["model"] == settings.llm_model and sent["system"] == "system"
+    assert sent["model"] == "claude-sonnet-5-5" and sent["system"] == "system"
     assert {t["name"] for t in sent["tools"]} >= {"execute_sql", "detect_anomalies"}
 
 

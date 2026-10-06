@@ -7,7 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.agent.llm import LLMProvider, create_provider
+from app.agent.llm import LLMConfig, LLMProvider, create_provider
 from app.api.routes import router
 from app.config import Settings, get_settings
 from app.errors import UserError
@@ -20,7 +20,7 @@ def error_response(status: int, code: str, message: str) -> JSONResponse:
 
 
 def create_app(
-    settings: Settings | None = None, llm_factory: Callable[[Settings], LLMProvider] = create_provider
+    settings: Settings | None = None, llm_factory: Callable[[Settings, LLMConfig | None], LLMProvider] = create_provider
 ) -> FastAPI:
     settings = settings or get_settings()
     setup_logging(settings.log_level)

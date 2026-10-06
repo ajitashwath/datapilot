@@ -9,8 +9,11 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=(".env", "../.env"), extra="ignore")
 
+    llm_provider: str = "anthropic"
     anthropic_api_key: str = ""
-    llm_model: str = "claude-sonnet-5-5"
+    gemini_api_key: str = ""
+    openai_api_key: str = ""
+    llm_model: str = ""
     llm_max_tokens: int = 2048
 
     max_upload_mb: int = 50

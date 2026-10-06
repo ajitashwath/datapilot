@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from typing import Literal
+
+from pydantic import BaseModel, Field, SecretStr
 
 from app.models import DatasetProfile, Relationship
 
@@ -23,12 +25,24 @@ class UploadResponse(BaseModel):
     errors: list[UploadError]
 
 
+class LLMStatus(BaseModel):
+    provider: str
+    model: str
+
+
+class LLMSettingsRequest(BaseModel):
+    provider: Literal["gemini", "openai", "anthropic"]
+    api_key: SecretStr = Field(min_length=8, max_length=400)
+    model: str = Field("", max_length=80, pattern=r"^[A-Za-z0-9._:/-]*$")
+
+
 class SessionState(BaseModel):
     session_id: str
     datasets: list[DatasetDetail]
     relationships: list[Relationship]
     filters: dict[str, str]
     active_dataset: str | None
+    llm: LLMStatus | None = None
 
 
 class RelationshipRequest(BaseModel):
@@ -45,7 +59,9 @@ class ChatRequest(BaseModel):
 
 class AppConfig(BaseModel):
     llm_configured: bool
+    provider: str
     model: str
+    default_models: dict[str, str]
     max_upload_mb: int
     max_files_per_session: int
     sql_timeout_seconds: float

@@ -6,9 +6,9 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.agent.agent import ErrorEvent, run_turn
-from app.agent.llm import LLMError, LLMProvider
+from app.agent.llm import PROVIDER_DEFAULTS, LLMConfig, LLMError, LLMProvider, server_config
 from app.api.schemas import (
-    AppConfig, ChatRequest, DatasetDetail, RelationshipRequest, SessionCreated, SessionState, UploadError, UploadResponse,
+    AppConfig, ChatRequest, DatasetDetail, LLMSettingsRequest, LLMStatus, RelationshipRequest, SessionCreated, SessionState, UploadError, UploadResponse,
 )
 from app.config import Settings
 from app.data.overview import build_overview
@@ -50,6 +50,7 @@ def state_of(session: Session) -> SessionState:
         relationships=session.store.relationships,
         filters=session.filters,
         active_dataset=session.active_dataset,
+        llm=LLMStatus(provider=session.llm.provider, model=session.llm.resolved_model()) if session.llm else None,
     )
 
 
@@ -65,8 +66,11 @@ def health() -> dict:
 @router.get("/config")
 def get_config(request: Request) -> AppConfig:
     s = settings_of(request)
+    default = server_config(s)
     return AppConfig(
-        llm_configured=bool(s.anthropic_api_key), model=s.llm_model, max_upload_mb=s.max_upload_mb,
+        llm_configured=default is not None, provider=s.llm_provider,
+        model=default.resolved_model() if default else PROVIDER_DEFAULTS[s.llm_provider]["model"],
+        default_models={name: info["model"] for name, info in PROVIDER_DEFAULTS.items()}, max_upload_mb=s.max_upload_mb,
         max_files_per_session=s.max_files_per_session, sql_timeout_seconds=s.sql_timeout_seconds,
         python_timeout_seconds=s.python_timeout_seconds, max_result_rows=s.max_result_rows,
         sample_datasets=[p.name for p in sample_files(s)],
@@ -166,6 +170,21 @@ def add_relationship(request: Request, session_id: str, body: RelationshipReques
     return session.store.add_relationship((body.left_table, body.left_column), (body.right_table, body.right_column))
 
 
+@router.put("/sessions/{session_id}/llm")
+def set_llm(request: Request, session_id: str, body: LLMSettingsRequest) -> SessionState:
+    session = session_of(request, session_id)
+    session.llm = LLMConfig(provider=body.provider, api_key=body.api_key, model=body.model.strip())
+    log_event("llm_configured", provider=body.provider, model=session.llm.resolved_model())
+    return state_of(session)
+
+
+@router.delete("/sessions/{session_id}/llm")
+def clear_llm(request: Request, session_id: str) -> SessionState:
+    session = session_of(request, session_id)
+    session.llm = None
+    return state_of(session)
+
+
 @router.delete("/sessions/{session_id}/filters")
 def clear_filters(request: Request, session_id: str) -> SessionState:
     session = session_of(request, session_id)
@@ -174,7 +193,7 @@ def clear_filters(request: Request, session_id: str) -> SessionState:
 
 
 def event_stream(
-    session: Session, body: ChatRequest, settings: Settings, llm_factory: Callable[[Settings], LLMProvider]
+    session: Session, body: ChatRequest, settings: Settings, llm_factory: Callable[[Settings, LLMConfig | None], LLMProvider]
 ) -> Iterator[str]:
     session_id_var.set(session.id)
     if not session.lock.acquire(blocking=False):
@@ -187,7 +206,7 @@ def event_stream(
             yield sse(ErrorEvent(message="Upload a CSV file first, then ask a question about it."))
             return
         log_event("chat_started", question_chars=len(body.message))
-        for event in run_turn(session, body.message, llm_factory(settings)):
+        for event in run_turn(session, body.message, llm_factory(settings, session.llm)):
             yield sse(event)
     except LLMError as exc:
         yield sse(ErrorEvent(message=exc.message))

@@ -51,6 +51,9 @@ const json = (body: unknown): RequestInit => ({
   body: JSON.stringify(body),
 });
 
+export const setLlm = (id: string, body: { provider: string; api_key: string; model: string }) =>
+  request<SessionState>(`/api/sessions/${id}/llm`, { ...json(body), method: "PUT" });
+export const clearLlm = (id: string) => request<SessionState>(`/api/sessions/${id}/llm`, { method: "DELETE" });
 export const getConfig = () => request<AppConfig>("/api/config");
 export const createSession = () => request<{ session_id: string }>("/api/sessions", { method: "POST" });
 export const getSession = (id: string) => request<SessionState>(`/api/sessions/${id}`);

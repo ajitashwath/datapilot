@@ -9,12 +9,14 @@ import {
   ApiError,
   addRelationship,
   clearFilters,
+  clearLlm,
   createSession,
   deleteDataset,
   getConfig,
   getSession,
   loadSamples,
   resetConversation,
+  setLlm,
   uploadFiles,
 } from "@/lib/api";
 import type { AppConfig, DatasetDetail, SessionState, UploadResponse } from "@/lib/types";
@@ -150,6 +152,25 @@ export default function Home() {
     }
   }
 
+  async function handleSaveLlm(provider: string, apiKey: string, model: string) {
+    if (!sessionId) return;
+    try {
+      setState(await setLlm(sessionId, { provider, api_key: apiKey, model }));
+      setNotice({ kind: "info", text: "API key saved for this session. It is kept in server memory only." });
+    } catch (error) {
+      fail(error);
+    }
+  }
+
+  async function handleClearLlm() {
+    if (!sessionId) return;
+    try {
+      setState(await clearLlm(sessionId));
+    } catch (error) {
+      fail(error);
+    }
+  }
+
   async function handleClearFilters() {
     if (!sessionId) return;
     try {
@@ -203,7 +224,15 @@ export default function Home() {
               </button>
             ))}
           </nav>
-          <SettingsPanel config={config} sessionId={sessionId} onClearConversation={handleClearConversation} onNewSession={handleNewSession} />
+          <SettingsPanel
+            config={config}
+            sessionId={sessionId}
+            llm={state?.llm ?? null}
+            onSaveLlm={handleSaveLlm}
+            onClearLlm={handleClearLlm}
+            onClearConversation={handleClearConversation}
+            onNewSession={handleNewSession}
+          />
         </div>
       </header>
 
@@ -245,6 +274,7 @@ export default function Home() {
                 dataset={selected}
                 datasetCount={state?.datasets.length ?? 0}
                 config={config}
+                llmReady={Boolean(config?.llm_configured || state?.llm)}
                 resetSignal={resetSignal}
                 onTurnFinished={refresh}
                 onLoadSamples={handleSamples}

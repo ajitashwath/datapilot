@@ -11,6 +11,7 @@ interface ChatProps {
   dataset: string | null;
   datasetCount: number;
   config: AppConfig | null;
+  llmReady: boolean;
   resetSignal: number;
   onTurnFinished: () => void;
   onLoadSamples: () => void;
@@ -26,7 +27,7 @@ const CAPABILITIES = [
 let counter = 0;
 const nextId = () => `m${Date.now()}-${counter++}`;
 
-export default function Chat({ sessionId, dataset, datasetCount, config, resetSignal, onTurnFinished, onLoadSamples }: ChatProps) {
+export default function Chat({ sessionId, dataset, datasetCount, config, llmReady, resetSignal, onTurnFinished, onLoadSamples }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -90,7 +91,7 @@ export default function Chat({ sessionId, dataset, datasetCount, config, resetSi
     [messages, send],
   );
 
-  const blocked = datasetCount === 0 || (config !== null && !config.llm_configured);
+  const blocked = datasetCount === 0 || !llmReady;
 
   return (
     <div className="flex h-full flex-col">
@@ -155,9 +156,9 @@ export default function Chat({ sessionId, dataset, datasetCount, config, resetSi
 
       <div className="border-t border-slate-200 bg-white/80 px-4 py-4 backdrop-blur sm:px-8">
         <div className="mx-auto max-w-3xl">
-          {config && !config.llm_configured && (
+          {config && !llmReady && (
             <p className="mb-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 ring-1 ring-amber-200">
-              The server has no LLM API key. Set ANTHROPIC_API_KEY in the backend environment and restart it to ask questions.
+              No LLM API key yet. Open Settings and add a Gemini or OpenAI API key to ask questions.
             </p>
           )}
           <form

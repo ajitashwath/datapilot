@@ -29,7 +29,7 @@ flowchart LR
     API --> SM["Session manager"]
     API --> DM["Dataset store<br/>(per session)"]
     API --> AG["Agent loop"]
-    AG -- "messages + tool schemas" --> LLM["LLM provider<br/>(Anthropic, swappable)"]
+    AG -- "messages + tool schemas" --> LLM["LLM provider<br/>(Gemini, OpenAI, Anthropic)"]
     LLM -- "tool calls" --> AG
     AG --> TR["Tool router<br/>typed arguments"]
     TR --> SQL["execute_sql<br/>validated SELECT"]
@@ -100,7 +100,7 @@ docs/                reviewer checklist and screenshots
 | Frontend | Next.js 15, TypeScript, Tailwind CSS, Recharts |
 | Backend | Python 3.11+, FastAPI, Pydantic |
 | Data | DuckDB (SQL), pandas and numpy (statistics, sandbox), PyArrow (Parquet hand-off) |
-| LLM | Anthropic Messages API with tool use, behind a small `LLMProvider` class |
+| LLM | Gemini, OpenAI (one OpenAI-compatible provider) and Anthropic, all with tool calling, behind a small `LLMProvider` class |
 | Tests | pytest, Vitest |
 | Packaging | Docker and docker-compose |
 
@@ -112,14 +112,15 @@ Requirements: Python 3.11+, Node 20+, an Anthropic API key for live questions.
 cp .env.example .env
 ```
 
-Edit `.env` and set `ANTHROPIC_API_KEY`. Everything except asking questions (upload, preview, quality, overview, tests) works without a key.
+You can either set a server default key in `.env` (`LLM_PROVIDER` plus `GEMINI_API_KEY`, `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`), or skip that and paste a Gemini or OpenAI key into **Settings** in the UI. A key entered in the UI is kept in server memory for that session only, is never returned by the API and is never logged. Everything except asking questions (upload, preview, quality, overview, tests) works without a key.
 
 ### Environment variables
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | empty | LLM access. Never sent to the browser. |
-| `LLM_MODEL` | `claude-sonnet-5-5` | Model used by the agent |
+| `LLM_PROVIDER` | `anthropic` | Server default provider: `gemini`, `openai` or `anthropic` |
+| `GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` | empty | Server default key for the chosen provider. Never sent to the browser. |
+| `LLM_MODEL` | provider default | Server default model (`gemini-2.5-flash`, `gpt-4o-mini`, `claude-sonnet-5-5`) |
 | `LLM_MAX_TOKENS` | `2048` | Max output tokens per LLM call |
 | `MAX_UPLOAD_MB` | `50` | Per file upload limit |
 | `MAX_FILES_PER_SESSION` | `10` | Datasets per session |
@@ -210,7 +211,7 @@ All tools take Pydantic argument models and return a typed `ToolResult` (data, e
 
 The user facing explanation is analytical provenance, not hidden reasoning: the executed SQL or code, the tool timeline and the computed anomaly reason.
 
-The LLM sits behind `LLMProvider.stream(system, messages, tools)` in `agent/llm.py`. To use another provider, implement that one method and return it from `create_provider`.
+The LLM sits behind `LLMProvider.stream(system, messages, tools)` in `agent/llm.py`. Gemini and OpenAI share `OpenAICompatibleProvider` (Gemini through its OpenAI compatible endpoint); Anthropic has its own class. To add another provider, implement that one method and return it from `create_provider`.
 
 ## Security considerations
 
@@ -264,7 +265,7 @@ No video is bundled. A good two minute walkthrough: load sample data, open Data 
 ## Known limitations
 
 - **Sandbox strength.** The Python sandbox is defence in depth (AST policy, separate process, empty environment, limits), not a hardened jail. Memory, CPU and file size limits only apply on Linux. Run the backend in a container with no extra privileges (the compose file does) and treat `execute_python` as the riskiest tool. Network blocking relies on the AST policy plus the absence of imports, not on a network namespace.
-- **Not verified here.** The environment used to build this had no Anthropic API key and no running Docker daemon. The live LLM path is covered with a faked client in the tests, but live evaluation (`--mode live`) and `docker compose up` were not run end to end. The sandbox resource limits were not exercised on Linux.
+- **Verified live only with Gemini.** One real question was run end to end against `gemini-2.5-flash` (tool call, executed SQL, grounded answer). OpenAI and Anthropic are covered with faked clients only, the full live evaluation (`--mode live`) was not run, and Docker was not available to run `docker compose up`. The sandbox resource limits were not exercised on Linux.
 - **In-memory sessions.** A server restart drops sessions and uploaded data. Run a single backend worker.
 - **One DuckDB per session** with a 1 GB memory limit by default. Very large files should be sampled or pre-aggregated.
 - **Anomaly defaults.** IQR on heavily skewed columns such as revenue flags many legitimate large orders; z-score or the time series method may suit better, and the model can choose.

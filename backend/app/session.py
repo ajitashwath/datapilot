@@ -5,7 +5,7 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from app.agent.llm import Message
+from app.agent.llm import LLMConfig, Message
 from app.config import Settings
 from app.data.datasets import DatasetStore
 from app.errors import UserError
@@ -27,6 +27,7 @@ class Session:
     records: list[AnalysisRecord] = field(default_factory=list)
     filters: dict[str, str] = field(default_factory=dict)
     active_dataset: str | None = None
+    llm: LLMConfig | None = None
     lock: threading.Lock = field(default_factory=threading.Lock)
     last_used: float = field(default_factory=time.time)
 
