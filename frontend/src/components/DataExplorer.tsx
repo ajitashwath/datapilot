@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import ChartView from "./ChartView";
 import QualityPanel from "./QualityPanel";
 import ResultTable from "./ResultTable";
+import SchedulesPanel from "./SchedulesPanel";
 import { getOverview, getPreview } from "@/lib/api";
 import { compactNumber, formatCell, formatNumber } from "@/lib/format";
 import type { DatasetProfile, Overview, TableResult } from "@/lib/types";
 
-const TABS = ["Overview", "Preview", "Schema", "Quality"] as const;
+const TABS = ["Overview", "Preview", "Schema", "Quality", "Schedules"] as const;
 type Tab = (typeof TABS)[number];
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
@@ -198,7 +199,9 @@ function SchemaPanel({ profile }: { profile: DatasetProfile }) {
   );
 }
 
-export default function DataExplorer({ sessionId, profile }: { sessionId: string; profile: DatasetProfile | null }) {
+export default function DataExplorer({
+  sessionId, profile, canEdit, minMinutes, hasLinkedData,
+}: { sessionId: string; profile: DatasetProfile | null; canEdit: boolean; minMinutes: number; hasLinkedData: boolean }) {
   const [tab, setTab] = useState<Tab>("Overview");
   if (!profile) {
     return (
@@ -233,6 +236,9 @@ export default function DataExplorer({ sessionId, profile }: { sessionId: string
         {tab === "Preview" && <PreviewPanel sessionId={sessionId} dataset={profile.name} />}
         {tab === "Schema" && <SchemaPanel profile={profile} />}
         {tab === "Quality" && <QualityPanel sessionId={sessionId} dataset={profile.name} />}
+        {tab === "Schedules" && (
+          <SchedulesPanel sessionId={sessionId} canEdit={canEdit} minMinutes={minMinutes} hasLinkedData={hasLinkedData} firstSql={`SELECT * FROM "${profile.name}" LIMIT 100`} />
+        )}
       </div>
     </div>
   );

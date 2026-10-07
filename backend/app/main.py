@@ -1,6 +1,7 @@
 import time
 import uuid
 from collections.abc import Callable
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -8,9 +9,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.agent.llm import LLMConfig, LLMProvider, create_provider
+from app.accounts import Accounts
+from app.api import accounts_routes, connector_routes, schedule_routes, sharing_routes
 from app.api.routes import public, router
 from app.config import Settings, get_settings
 from app.errors import UserError
+from app.db import Database
+from app.jobs import JobRunner
+from app.schedules import Scheduler, Schedules
+from app.sharing import Sharing
 from app.limits import RateLimiter
 from app.logging_setup import log_event, request_id_var, session_id_var, setup_logging
 from app.metrics import metrics
@@ -26,9 +33,32 @@ def create_app(
 ) -> FastAPI:
     settings = settings or get_settings()
     setup_logging(settings.log_level)
-    app = FastAPI(title="DataPilot API", version="1.1.0")
+    root = settings.sessions_root()
+    db = Database(root / "app.db")
+    accounts = Accounts(db, settings)
+    manager = SessionManager(settings, accounts)
+    schedules = Schedules(db, settings)
+    scheduler = Scheduler(schedules, manager, settings)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        if settings.scheduler_enabled:
+            scheduler.start()
+        yield
+        scheduler.stop()
+        app.state.jobs.shutdown()
+
+    app = FastAPI(title="DataPilot API", version="1.2.0", lifespan=lifespan)
     app.state.settings = settings
-    app.state.sessions = SessionManager(settings)
+    app.state.db = db
+    app.state.accounts = accounts
+    app.state.sessions = manager
+    app.state.schedules = schedules
+    app.state.scheduler = scheduler
+    app.state.sharing = Sharing(db, settings)
+    app.state.jobs = JobRunner()
+    app.state.http_transport = None
+    app.state.postgres_connect = None
     app.state.limiter = RateLimiter()
     app.state.llm_factory = llm_factory
     restored = app.state.sessions.restore_all()
@@ -73,6 +103,12 @@ def create_app(
         return error_response(500, "internal_error", "Something went wrong on the server. Please try again.")
 
     app.include_router(public)
+    app.include_router(accounts_routes.public)
+    app.include_router(accounts_routes.router)
+    app.include_router(sharing_routes.public)
+    app.include_router(sharing_routes.router)
+    app.include_router(schedule_routes.router)
+    app.include_router(connector_routes.router)
     app.include_router(router)
     return app
 

@@ -23,6 +23,10 @@ The LLM never does the maths. It plans, picks tools and writes queries. Determin
 - **Persistence**: sessions live in a per-session DuckDB file. Datasets, relationships, filters, conversation memory and the saved transcript survive a server restart, and DuckDB spills to disk so large files do not have to fit in memory. Uploads are streamed to disk, never held whole in memory.
 - **Access control and cost protection**: optional access token login, per-IP rate limits, a question quota on the shared server key, and API keys encrypted in memory and never written to disk.
 - **Sharing your work**: export any result table as CSV (spreadsheet formula injection neutralised), export the whole conversation as a Markdown report with answers, tables, SQL and anomaly explanations, and switch bar, line and pie charts in place.
+- **Accounts, teams and workspaces** (`AUTH_MODE=accounts`): email and password sign-up with scrypt hashed passwords, per-user workspaces that other people cannot even detect, teams with admin, member and viewer roles, and one-click moving of a workspace into a team. Viewers get a genuinely read-only workspace.
+- **Share links**: publish a frozen, read-only snapshot of a conversation (answers, tables, charts, SQL) at an unguessable URL that works without signing in. Links can be revoked at any time.
+- **Scheduled queries**: save any SQL from an answer to run hourly, daily or weekly. Results of the latest runs are kept, runs can be triggered manually, and a schedule can re-download linked datasets first. Scheduled workspaces are exempt from expiry.
+- **Data connectors**: import from a CSV link, a Google Sheet shared by link (with refresh), a SQLite file, or a read-only Postgres connection. Imports run as background jobs with progress, and connectors cannot be pointed at private network addresses (see Security).
 - **Accessible and responsive UI**: works on phone widths with a slide-out dataset panel, keyboard focus on scrollable regions, labelled controls and live regions for streaming answers. Audited with axe-core (WCAG 2.1 A and AA) with no violations across the main views.
 
 ## Architecture
@@ -48,6 +52,12 @@ flowchart LR
     DQ --> DDB
     DM --> DDB
     AG -. "structured logs" .-> LOG["JSON logs"]
+    API --> APPDB[("App database<br/>SQLite: users, teams,<br/>shares, schedules")]
+    API --> JOBS["Job runner<br/>imports"]
+    JOBS --> CON["Connectors<br/>URL, Sheets, SQLite, Postgres"]
+    CON --> DDB
+    SCH["Scheduler thread"] --> APPDB
+    SCH --> DDB
 ```
 
 One turn of the agent loop:
@@ -75,7 +85,13 @@ backend/app/
   limits.py          per-client sliding window rate limiter
   metrics.py         Prometheus style counters
   secrets_box.py     encryption for API keys held in memory
-  api/               routes, request/response schemas, auth and rate limit dependencies
+  db.py              SQLite app database (users, teams, shares, schedules)
+  accounts.py        sign-up, sign-in, teams, workspace permissions
+  sharing.py         read-only share link snapshots
+  schedules.py       saved queries and the scheduler thread
+  connectors.py      URL, Google Sheets, SQLite and Postgres imports with SSRF protection
+  jobs.py            in-process background job runner for imports
+  api/               routes (core, accounts, sharing, schedules, connectors), schemas, auth and rate limit dependencies
   agent/
     agent.py         the tool calling loop, streaming events, grounding check
     tools.py         tool definitions, argument models, router
@@ -138,6 +154,18 @@ You can either set a server default key in `.env` (`LLM_PROVIDER` plus `GEMINI_A
 | `SANDBOX_MODE` | `subprocess` | `off` removes the `execute_python` tool entirely |
 | `UPLOAD_ROOT` | `var/sessions` | Where session folders (DuckDB file, metadata, transcript) are stored |
 | `DUCKDB_MEMORY_LIMIT` | `1GB` | Memory per session before DuckDB spills to disk |
+| `AUTH_MODE` | `none` | `accounts` turns on sign-up, sign-in, teams and workspace permissions (replaces `ACCESS_TOKEN`) |
+| `REGISTRATION` | `open` | `closed` stops new sign-ups |
+| `ALLOWED_EMAIL_DOMAIN` | empty | Only emails from this domain may register |
+| `TOKEN_TTL_DAYS` | `30` | Lifetime of a sign-in token |
+| `LOGIN_PER_MINUTE` | `10` | Sign-in and sign-up attempts per IP and per email |
+| `SESSION_TTL_MINUTES` | `120` | Idle expiry for anonymous workspaces. `0` disables expiry. Owned and scheduled workspaces never expire |
+| `SCHEDULE_MIN_MINUTES` | `15` | Shortest allowed schedule interval |
+| `MAX_SCHEDULES_PER_SESSION` | `10` | Schedules per workspace |
+| `SCHEDULER_ENABLED` | `true` | Run the background scheduler thread |
+| `ALLOW_PRIVATE_CONNECTIONS` | `false` | Let connectors reach private and loopback addresses (development only) |
+| `CONNECTOR_MAX_ROWS` | `1000000` | Rows imported per table from SQLite and Postgres |
+| `SHARED_PER_MINUTE` | `30` | Rate limit on public share links per IP |
 | `MAX_UPLOAD_MB` | `50` | Per file upload limit |
 | `MAX_FILES_PER_SESSION` | `10` | Datasets per session |
 | `SESSION_TTL_MINUTES` | `120` | Idle session expiry |
@@ -235,7 +263,9 @@ The LLM sits behind `LLMProvider.stream(system, messages, tools)` in `agent/llm.
 - **SQL**: every query is parsed by DuckDB. Exactly one statement, SELECT only, table function calls restricted (no `read_csv`, `glob` and similar), only the session's own tables allowed, execution timeout and row cap. Mutations, `ATTACH`, `COPY`, `PRAGMA` and multi statement input are rejected before execution.
 - **Python**: the code is checked with an AST allow policy (no imports, no dunder access, no `open`, `eval`, `getattr`, file or network pandas and numpy functions) and then runs in a separate interpreter with an empty environment, an empty working directory, a restricted builtins table, a wall clock timeout and CPU, memory and file size limits (rlimits on Linux, a job object memory limit on Windows). Pandas, numpy, math and statistics are wrapped so user code can never be handed a module (this closed a real escape through `pd.compat.os`). `SANDBOX_MODE=off` removes the tool completely. The model can never run shell commands. See the limitations for what this does and does not guarantee.
 - **Prompt injection**: dataset values are truncated in the prompt and the system prompt marks them as untrusted data.
-- **Access control**: optional bearer token (constant time comparison) on every API route except health and config. Sessions are 128 bit random identifiers.
+- **Access control**: optional shared bearer token, or full accounts. Passwords use scrypt with per-user salts, sign-in tokens are random and stored only as SHA-256 hashes, sign-in attempts are throttled per IP and per email, and unknown emails take the same time and give the same error as wrong passwords. Workspaces you cannot access answer 404, not 403, so their existence is not revealed. Viewers are blocked from every mutating route at one central check.
+- **Connector safety (SSRF)**: only https links are accepted (http only when private connections are explicitly allowed), credentials in URLs are rejected, every hostname is resolved and refused unless all of its addresses are public (loopback, private, link-local, cloud metadata, carrier-grade NAT and IPv4-mapped IPv6 are all blocked), the connection is then pinned to the checked address with the original host kept for TLS, and every redirect hop is checked again. Downloads are size and time limited and HTML pages (such as a Google sign-in wall) are rejected. SQLite files are opened read-only and Postgres connections are read-only with a statement timeout, only tables from the database catalog can be imported, and credentials are never stored or logged.
+- **Share links**: 128 bit random tokens, immutable snapshots (later questions never leak into an old link), revocation, `noindex` and `no-store` headers, per-IP rate limiting. Datasets and API keys are never part of a snapshot.
 - **Abuse and cost control**: sliding window rate limits per client IP on chat, uploads and session creation, 429 responses with `Retry-After`, and a per session question quota when the shared server key is used.
 - **API keys**: a key entered in the UI is encrypted with Fernet in memory, never returned by the API, never logged and never persisted. Session restore deliberately drops it.
 - **Dependencies**: versions pinned in `backend/requirements.lock`, audited with `pip-audit` and `npm audit --omit=dev` in CI. The last audit found and fixed vulnerable `starlette`, `python-multipart`, `cryptography`, `anyio`, `idna`, `python-dotenv` and `next`/`postcss`.
@@ -290,8 +320,12 @@ No video is bundled. A good two minute walkthrough: load sample data, open Data 
 - **Docker images were not built here.** The Dockerfiles, compose file and CI workflow are written and the compose file validates, but Docker Desktop would not start in the build environment, so `docker compose up` has not been run. The CI workflow builds both images and checks the health endpoint.
 - **Live LLM coverage is partial.** Only Gemini was run live. Of 18 live evaluation cases, 12 passed, 4 could not complete because the Gemini free tier allows only 20 requests per day for `gemini-2.5-flash` and the quota ran out, and 2 failed: `region_comparison_chart` (the model answered with a table and no chart; the system prompt now asks for a chart on comparisons, not yet re-verified live) and `top_five_customers` (an expected figure was missing from the answer; the cause was not determined before the quota ended, a different but reasonable interpretation such as excluding returned orders is possible). OpenAI and Anthropic are covered with faked clients only.
 - **Single worker.** DuckDB files are single writer and the rate limiter and session map live in process memory. Scale vertically or run independent deployments.
-- **Authentication is a shared token.** `ACCESS_TOKEN` gates the whole deployment. There are no per-user accounts, teams, roles or share links. Sessions are 128 bit random identifiers, so treat a session ID like a password.
-- **Not built, on purpose.** Scheduled analyses, connectors to databases or Google Sheets, and shareable live dashboards are separate products. The Markdown report export is the sharing path. A job queue was not added because uploads are processed synchronously (a 400,000 row file profiles in about a second).
+- **Accounts are deliberately basic.** There is no email verification, password reset, SSO or invitation emails: people must register first and are then added to a team by their email address. Treat a session ID like a password.
+- **Scheduled queries are SQL only.** They store results in the app and send no emails or webhooks. Scheduled LLM questions are not supported because API keys are never persisted.
+- **Share links are snapshots, not live dashboards.** They show the conversation as it was, they do not re-run queries, and anyone with the link can read it until it is revoked.
+- **Postgres is verified only against a fake driver.** The query building, read-only options, table allow-listing, SSRF check and error handling are tested, and the real `psycopg` driver was exercised against a closed port, but no real Postgres server was available here. Google Sheets work only for sheets shared by link (there is no OAuth). MySQL and other databases are not supported.
+- **One node.** The app database is SQLite, the job runner and scheduler are in-process threads, and DuckDB session files are single writer. This is right for one server and not for horizontal scaling.
+- **The DNS pinning closes rebinding for downloads**, but a Postgres connection resolves its host once for the safety check and again inside the driver, which leaves a small rebinding window.
 - **Chart editing is limited** to switching between bar, line and pie and inspecting the data.
 - **Large files** are spilled to disk by DuckDB but profiling and overview still read whole columns, so multi gigabyte files should be sampled or pre-aggregated.
 - **Anomaly defaults.** IQR on heavily skewed columns such as revenue flags many legitimate large orders; z-score or the time series method may suit better, and the model can choose.

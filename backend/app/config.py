@@ -38,6 +38,25 @@ class Settings(BaseSettings):
     server_key_turn_limit: int = 100
     sandbox_mode: str = "subprocess"
 
+    auth_mode: str = "none"
+    registration: str = "open"
+    allowed_email_domain: str = ""
+    token_ttl_days: int = 30
+    login_per_minute: int = 10
+    shared_per_minute: int = 30
+    max_teams_per_user: int = 20
+    schedule_min_minutes: int = 15
+    max_schedules_per_session: int = 10
+    schedule_runs_kept: int = 20
+    max_shares_per_session: int = 20
+    allow_private_connections: bool = False
+    connector_max_rows: int = 1_000_000
+    connector_timeout_seconds: float = 30.0
+    scheduler_enabled: bool = True
+
+    def sessions_root(self) -> Path:
+        return Path(self.upload_root) if self.upload_root else ROOT_DIR / "var" / "sessions"
+
     cors_origins: str = "http://localhost:3000"
     sample_data_dir: str = str(ROOT_DIR / "data")
     upload_root: str = ""

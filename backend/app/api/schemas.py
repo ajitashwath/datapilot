@@ -38,6 +38,9 @@ class LLMSettingsRequest(BaseModel):
 
 class SessionState(BaseModel):
     session_id: str
+    name: str
+    role: str
+    team_id: str | None = None
     datasets: list[DatasetDetail]
     relationships: list[Relationship]
     filters: dict[str, str]
@@ -69,4 +72,8 @@ class AppConfig(BaseModel):
     max_result_rows: int
     sample_datasets: list[str]
     auth_required: bool
+    auth_mode: str
+    registration_open: bool
     python_enabled: bool
+    schedule_min_minutes: int
+    allow_private_connections: bool

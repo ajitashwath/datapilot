@@ -15,6 +15,9 @@ interface SidebarProps {
   onLoadSamples: () => void;
   onAddRelationship: (body: { left_table: string; left_column: string; right_table: string; right_column: string }) => Promise<void>;
   onClearFilters: () => void;
+  readOnly: boolean;
+  onConnect: () => void;
+  onRefresh: (name: string) => void;
 }
 
 function UploadZone({ onUpload, uploading, config }: { onUpload: (files: File[]) => void; uploading: boolean; config: AppConfig | null }) {
@@ -56,7 +59,7 @@ function UploadZone({ onUpload, uploading, config }: { onUpload: (files: File[])
   );
 }
 
-function DatasetItem({ detail, active, onSelect, onRemove }: { detail: DatasetDetail; active: boolean; onSelect: () => void; onRemove: () => void }) {
+function DatasetItem({ detail, active, readOnly, onSelect, onRemove, onRefresh }: { detail: DatasetDetail; active: boolean; readOnly: boolean; onSelect: () => void; onRemove: () => void; onRefresh: () => void }) {
   const p = detail.profile;
   return (
     <li
@@ -71,18 +74,34 @@ function DatasetItem({ detail, active, onSelect, onRemove }: { detail: DatasetDe
       </div>
       <div className="mt-0.5 flex items-center justify-between text-xs text-slate-600">
         <span>
-          {p.rows.toLocaleString()} rows, {p.column_count} columns
+          {p.rows.toLocaleString()} rows, {p.column_count} columns{p.source ? `, ${p.source.split(":")[0]}` : ""}
         </span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-          className="text-slate-500 opacity-0 transition hover:text-rose-600 group-hover:opacity-100"
-          aria-label={`Remove ${p.name}`}
-        >
-          Remove
-        </button>
+        {!readOnly && (
+          <span className="flex gap-3 opacity-0 transition focus-within:opacity-100 group-hover:opacity-100">
+            {p.source?.startsWith("url:") && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRefresh();
+                }}
+                className="text-slate-600 hover:text-brand-600"
+                aria-label={`Refresh ${p.name} from its link`}
+              >
+                Refresh
+              </button>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+              className="text-slate-600 hover:text-rose-600"
+              aria-label={`Remove ${p.name}`}
+            >
+              Remove
+            </button>
+          </span>
+        )}
       </div>
     </li>
   );
@@ -151,17 +170,24 @@ function RelationshipForm({ datasets, onAdd }: { datasets: DatasetDetail[]; onAd
 }
 
 export default function Sidebar(props: SidebarProps) {
-  const { state, config, selected, uploading, onSelect, onUpload, onRemove, onLoadSamples, onAddRelationship, onClearFilters } = props;
+  const { state, config, selected, uploading, onSelect, onUpload, onRemove, onLoadSamples, onAddRelationship, onClearFilters, readOnly, onConnect, onRefresh } = props;
   const datasets = state?.datasets ?? [];
   const filters = Object.entries(state?.filters ?? {});
   return (
     <aside aria-label="Datasets" className="scroll-thin flex h-full w-80 max-w-[85vw] shrink-0 flex-col gap-5 overflow-y-auto border-r border-slate-200 bg-slate-50 p-4">
-      <UploadZone onUpload={onUpload} uploading={uploading} config={config} />
+      {!readOnly && (
+        <>
+          <UploadZone onUpload={onUpload} uploading={uploading} config={config} />
+          <button onClick={onConnect} className="-mt-2 rounded-lg px-3 py-2 text-sm font-medium text-brand-700 ring-1 ring-brand-100 hover:bg-brand-50">
+            Add from a link, SQLite or Postgres
+          </button>
+        </>
+      )}
 
       <section>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Datasets</h2>
-          {config && config.sample_datasets.length > 0 && (
+          {!readOnly && config && config.sample_datasets.length > 0 && (
             <button onClick={onLoadSamples} className="text-xs font-medium text-brand-600 hover:underline">
               Load samples
             </button>
@@ -180,7 +206,7 @@ export default function Sidebar(props: SidebarProps) {
               </li>
             )}
             {datasets.map((d) => (
-              <DatasetItem key={d.profile.name} detail={d} active={selected === d.profile.name} onSelect={() => onSelect(d.profile.name)} onRemove={() => onRemove(d.profile.name)} />
+              <DatasetItem key={d.profile.name} detail={d} readOnly={readOnly} active={selected === d.profile.name} onSelect={() => onSelect(d.profile.name)} onRemove={() => onRemove(d.profile.name)} onRefresh={() => onRefresh(d.profile.name)} />
             ))}
           </ul>
         )}
@@ -198,7 +224,7 @@ export default function Sidebar(props: SidebarProps) {
           ) : (
             <p className="text-xs text-slate-500">No join keys were detected automatically.</p>
           )}
-          <RelationshipForm datasets={datasets} onAdd={onAddRelationship} />
+          {!readOnly && <RelationshipForm datasets={datasets} onAdd={onAddRelationship} />}
         </section>
       )}
 

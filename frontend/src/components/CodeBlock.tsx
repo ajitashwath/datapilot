@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function CodeBlock({ label, code }: { label: string; code: string }) {
+export default function CodeBlock({ label, code, action }: { label: string; code: string; action?: React.ReactNode }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -16,8 +16,9 @@ export default function CodeBlock({ label, code }: { label: string; code: string
   }
 
   return (
+    <div className="relative">
     <details className="group rounded-lg border border-slate-200 bg-white">
-      <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900">
+      <summary className={`flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 ${action ? "pr-28" : ""}`}>
         <span className="text-slate-500 transition group-open:rotate-90">&#9656;</span>
         {label}
       </summary>
@@ -30,5 +31,7 @@ export default function CodeBlock({ label, code }: { label: string; code: string
         </pre>
       </div>
     </details>
+    {action && <div className="absolute right-2 top-1.5">{action}</div>}
+    </div>
   );
 }

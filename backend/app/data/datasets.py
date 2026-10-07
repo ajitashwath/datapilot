@@ -65,7 +65,7 @@ class DatasetStore:
         path.write_bytes(content)
         return self.add_csv_path(filename, path)
 
-    def add_csv_path(self, filename: str, path: Path) -> DatasetProfile:
+    def add_csv_path(self, filename: str, path: Path, source: str | None = None) -> DatasetProfile:
         try:
             if len(self.profiles) >= self.settings.max_files_per_session:
                 raise UserError(f"A session can hold at most {self.settings.max_files_per_session} datasets.", "too_many_files", 422)
@@ -74,6 +74,7 @@ class DatasetStore:
             name = table_name_for(filename, self.table_names())
             skipped = load_csv_table(self.con, name, path, filename)
             profile = profile_dataset(self.con, name, filename, skipped)
+            profile.source = source
             if profile.rows == 0 or profile.column_count == 0:
                 self.con.execute(f"DROP TABLE IF EXISTS {quote(name)}")
                 raise UserError(f"'{filename}' has a header but no data rows.", "empty_file", 422)
@@ -83,6 +84,30 @@ class DatasetStore:
         for other in self.profiles.values():
             self.relationships.extend(infer_between(self.con, profile, other))
         self.profiles[name] = profile
+        self.save()
+        return profile
+
+    def replace_csv_path(self, name: str, path: Path, source: str | None) -> DatasetProfile:
+        old = self.get_profile(name)
+        staging = "dp_refresh_staging"
+        try:
+            validate_file(old.filename, path, self.settings.max_upload_mb)
+            path = ensure_utf8(path)
+            self.con.execute(f"DROP TABLE IF EXISTS {quote(staging)}")
+            skipped = load_csv_table(self.con, staging, path, old.filename)
+            if self.con.execute(f"SELECT count(*) FROM {quote(staging)}").fetchone()[0] == 0:
+                raise UserError(f"The refreshed data for '{name}' has no rows, so the existing data was kept.", "empty_file", 422)
+            self.con.execute(f"DROP TABLE {quote(name)}")
+            self.con.execute(f"ALTER TABLE {quote(staging)} RENAME TO {quote(name)}")
+        finally:
+            self.con.execute(f"DROP TABLE IF EXISTS {quote(staging)}")
+            for leftover in (path, path.with_name(path.stem + ".utf8.csv")):
+                leftover.unlink(missing_ok=True)
+        profile = profile_dataset(self.con, name, old.filename, skipped)
+        profile.source = source
+        self.profiles[name] = profile
+        self.quality.pop(name, None)
+        shutil.rmtree(self.directory / f"parquet_{name}", ignore_errors=True)
         self.save()
         return profile
 

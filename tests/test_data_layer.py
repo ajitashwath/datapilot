@@ -196,6 +196,12 @@ class TestRelationships:
         relationship = store.add_relationship(("orders", "region"), ("customers", "region"))
         assert relationship.source == "user" and relationship.cardinality == "many-to-many"
 
+    def test_tables_named_like_internal_aliases_do_not_break_inference(self, empty_store):
+        empty_store.add_csv("a.csv", b"a,b\n1,x\n2,y\n3,z\n")
+        empty_store.add_csv("b.csv", b"a,b\n1,x\n2,y\n3,z\n")
+        assert {"a", "b"} <= empty_store.table_names()
+        assert empty_store.add_relationship(("a", "b"), ("b", "a")).overlap_pct == 0.0
+
     def test_relationship_with_unknown_column_fails(self, store):
         with pytest.raises(UserError):
             store.add_relationship(("orders", "nope"), ("customers", "customer_id"))
