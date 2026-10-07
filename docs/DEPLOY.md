@@ -51,6 +51,19 @@ DuckDB files are single writer and the rate limiter and session map are in proce
 - Workspaces owned by a user never expire. Anonymous workspaces expire after `SESSION_TTL_MINUTES` unless they have an active schedule. Set it to `0` to disable expiry.
 - Public share links expose a snapshot of a conversation (tables, SQL, charts) to anyone with the URL until revoked. Put the site behind your normal access controls if links must stay inside your network, or disable sharing by not giving users the owner role.
 
+## Single sign-on (OpenID Connect)
+
+Accounts mode can sign users in through any standard OpenID Connect provider (Google, Microsoft Entra, Okta, Keycloak and similar). Register DataPilot with the provider as a web application, set the redirect address to `PUBLIC_URL` followed by `/sso` (for example `https://data.example.com/sso`), then set:
+
+| Variable | Meaning |
+| --- | --- |
+| `OIDC_ISSUER` | The provider's issuer address, which must serve `/.well-known/openid-configuration` |
+| `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET` | From the provider's app registration |
+| `OIDC_NAME` | Label for the button (default "single sign-on") |
+| `OIDC_SCOPES` | Default `openid email profile` |
+
+The flow is the authorization code flow with PKCE, a single-use state and a nonce. The identity token must be RS256 signed by a key from the provider's key set, with the right issuer, audience and expiry, and the provider must report the email as verified. Accounts are matched by email: an existing password account with the same email is signed in to, and a new account is created if registration is open. `ALLOWED_EMAIL_DOMAIN` still applies. Signing in through the provider counts as the second factor, so the local two-factor prompt is skipped. The provider must use https unless `ALLOW_PRIVATE_CONNECTIONS=true`.
+
 ## Two-factor sign-in
 
 Accounts mode offers authenticator app codes (TOTP, any standard app). Set a stable `SECRET_KEY`; without one the option is hidden, because the stored secrets could not be read after a restart. Users turn it on from the 2FA button, which shows a QR code and 10 single-use recovery codes. Sign-in then asks for a code after the password, and a password reset does not skip it.

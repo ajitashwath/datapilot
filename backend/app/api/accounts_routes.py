@@ -108,6 +108,24 @@ class TwoFactorDisable(BaseModel):
     code: str = Field(min_length=6, max_length=20)
 
 
+class SsoCallback(BaseModel):
+    code: str = Field(min_length=1, max_length=2000)
+    state: str = Field(min_length=10, max_length=200)
+
+
+@public.get("/sso/start", dependencies=[Depends(accounts_enabled)])
+def sso_start(request: Request) -> dict:
+    request.app.state.limiter.check("sso_start", client_ip(request), settings_of(request).login_per_minute, 60)
+    return {"url": request.app.state.sso.start(request.app.state.http_transport)}
+
+
+@public.post("/sso/callback", dependencies=[Depends(accounts_enabled)])
+def sso_callback(request: Request, body: SsoCallback) -> AuthResponse:
+    request.app.state.limiter.check("sso_callback", client_ip(request), settings_of(request).login_per_minute, 60)
+    token, user = request.app.state.sso.finish(body.code, body.state, request.app.state.http_transport)
+    return AuthResponse(token=token, user=user)
+
+
 @public.post("/login/2fa", dependencies=[Depends(accounts_enabled)])
 def login_with_code(request: Request, body: TwoFactorLogin) -> AuthResponse:
     accounts = accounts_of(request)

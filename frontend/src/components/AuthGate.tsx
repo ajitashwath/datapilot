@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ApiError, forgotPassword, login, loginWithCode, register, resendVerification, setToken } from "@/lib/api";
+import { ApiError, forgotPassword, login, loginWithCode, register, resendVerification, setToken, ssoStart } from "@/lib/api";
 import type { AppConfig } from "@/lib/types";
 
 interface AuthGateProps {
@@ -82,6 +82,18 @@ export default function AuthGate({ config, message, onSharedToken, onSignedIn }:
       }
       setError(failure instanceof ApiError ? failure.message : "Could not sign in. Please try again.");
     } finally {
+      setBusy(false);
+    }
+  }
+
+  async function startSso() {
+    setBusy(true);
+    setError(null);
+    try {
+      const started = await ssoStart();
+      window.location.assign(started.url);
+    } catch (failure) {
+      setError(failure instanceof ApiError ? failure.message : "Could not start single sign-on.");
       setBusy(false);
     }
   }
@@ -217,6 +229,18 @@ export default function AuthGate({ config, message, onSharedToken, onSignedIn }:
           <button type="button" onClick={resend} disabled={busy || !email.trim()} className="mt-2 w-full rounded-lg px-3 py-2 text-sm font-medium text-brand-700 ring-1 ring-brand-100 hover:bg-brand-50 disabled:opacity-40">
             Send the confirmation email again
           </button>
+        )}
+        {accounts && config.sso_name && mode === "login" && (
+          <>
+            <div className="my-4 flex items-center gap-3 text-xs text-slate-500">
+              <span className="h-px flex-1 bg-slate-200" />
+              or
+              <span className="h-px flex-1 bg-slate-200" />
+            </div>
+            <button type="button" onClick={startSso} disabled={busy} className="w-full rounded-lg px-3 py-2 text-sm font-medium text-slate-800 ring-1 ring-slate-300 hover:bg-slate-100 disabled:opacity-40">
+              Continue with {config.sso_name}
+            </button>
+          </>
         )}
         {asking && (
           <button type="button" onClick={() => switchMode("login")} className="mt-3 block w-full text-center text-sm font-medium text-brand-700 hover:underline">

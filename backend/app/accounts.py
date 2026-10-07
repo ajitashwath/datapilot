@@ -226,6 +226,25 @@ class Accounts:
             ),
         )
 
+    def sign_in_with_sso(self, email: str, name: str) -> tuple[str, User]:
+        if not EMAIL_PATTERN.match(email):
+            raise UserError("The identity provider returned an invalid email address.", "invalid_email", 422)
+        domain = self.settings.allowed_email_domain.strip().lower()
+        if domain and not email.endswith("@" + domain):
+            raise UserError(f"Only {domain} email addresses can sign in to this server.", "email_domain_not_allowed", 403)
+        row = self.db.one("SELECT * FROM users WHERE email = ?", (email,))
+        if row is None:
+            if self.settings.registration != "open":
+                raise UserError("Registration is closed on this server.", "registration_closed", 403)
+            user_id = uuid.uuid4().hex
+            self.db.run(
+                "INSERT INTO users (id, email, name, password_hash, verified, created_at) VALUES (?, ?, ?, ?, 1, ?)",
+                (user_id, email, name, hash_password(secrets.token_urlsafe(32)), time.time()),
+            )
+        else:
+            self.db.run("UPDATE users SET verified = 1 WHERE id = ? AND verified = 0", (row["id"],))
+        return self.start_session(self.db.one("SELECT * FROM users WHERE email = ?", (email,)))
+
     def user_for_token(self, token: str) -> User | None:
         row = self.db.one(
             "SELECT u.id, u.email, u.name FROM auth_tokens t JOIN users u ON u.id = t.user_id WHERE t.token_hash = ? AND t.expires_at > ?",
