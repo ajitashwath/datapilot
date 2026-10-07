@@ -440,6 +440,8 @@ export default function Home() {
                 resetSignal={resetSignal}
                 onTurnFinished={refresh}
                 onLoadSamples={handleSamples}
+                usingSharedKey={Boolean(config?.llm_configured && !state?.llm)}
+                onOpenSettings={() => setSettingsOpen(true)}
               />
             </div>
           )}

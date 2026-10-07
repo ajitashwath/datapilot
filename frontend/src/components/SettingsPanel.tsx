@@ -47,7 +47,7 @@ function ProviderForm({ config, llm, onSave, onClear }: { config: AppConfig | nu
 
   return (
     <div>
-      <h2 className="mb-2 text-sm font-semibold text-slate-900">AI provider</h2>
+      <h2 className="mb-2 text-sm font-semibold text-slate-900">Use your own API key</h2>
       {llm ? (
         <div className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800 ring-1 ring-emerald-200">
           <p className="font-medium">
@@ -60,7 +60,7 @@ function ProviderForm({ config, llm, onSave, onClear }: { config: AppConfig | nu
         </div>
       ) : (
         <p className="mb-2 text-xs text-slate-500">
-          {config?.llm_configured ? `Using the server default (${config.model}). Add your own key to override it.` : "Add an API key to start asking questions."}
+          {config?.llm_configured ? `Using the shared server key (${config.model}), which has a daily limit. Paste your own key below to avoid it.` : "Add an API key to start asking questions."}
         </p>
       )}
       <form onSubmit={submit} className="mt-2 space-y-2">

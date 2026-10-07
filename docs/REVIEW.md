@@ -38,7 +38,7 @@ A strict self-review of DataPilot. Status values: **Done** (implemented and exer
 | Shareable analyses | Immutable public snapshot links with revoke, noindex, rate limit, public read-only page | Done (snapshots, not live dashboards) | `sharing.py`, `app/share/[token]`, `test_sharing_schedules.py`, signed-out browser run |
 | Scheduling | Saved SQL on an interval, run now, pause, history, optional refresh of linked data, scheduler thread, expiry exemption | Done (SQL only, no notifications) | `schedules.py`, `test_sharing_schedules.py`, browser run |
 | Connectors | CSV link and Google Sheets with refresh, SQLite file, Postgres, SSRF protection with DNS pinning and redirect checks | Done (Postgres integration-tested on a real server, TLS through a proxy) | `connectors.py`, `test_connectors.py`, `test_postgres_integration.py`, browser run |
-| Account recovery and email | Optional SMTP: email confirmation, forgot and reset links, change password with session revocation, security notice emails, schedule notifications (summary only) | Done (tested against a local SMTP server and in the browser, not a real mail provider) | `mailer.py`, `accounts.py`, `test_email_flows.py`, browser run |
+| Account recovery and email | Optional SMTP: email confirmation, forgot and reset links, change password with session revocation, security notice emails, schedule notifications (summary only) | Done (tested against a local SMTP server, in the browser, and against Ethereal's real SMTP and IMAP servers over STARTTLS: confirmation, reset and notice emails all arrived and the links worked) | `mailer.py`, `accounts.py`, `test_email_flows.py`, browser run |
 | Job queue | In-process job runner with status polling, used for imports and refreshes | Done (single node) | `jobs.py`, `connector_routes.py` |
 | Responsive and accessible UI | Phone layout with drawer, keyboard focus, labels, live regions; axe-core (WCAG 2.1 A and AA) reports no violations on chat, all explorer tabs and settings at phone and desktop widths | Done | browser audits |
 | Metrics and alerting | `/api/metrics` counters, example alert rules | Done (no alert manager bundled) | `metrics.py`, `docs/DEPLOY.md` |
@@ -74,5 +74,5 @@ The interface was redesigned around design tokens: a left rail (workspace, views
 - Re-run the whole live evaluation on one model with a paid key, so every case runs on the final prompt, and re-check `underperforming_products`.
 - Run OpenAI and Anthropic live, and test Postgres TLS against a server with a private CA.
 - Move `execute_python` into a network-less sandbox container if it must stay enabled for untrusted users.
-- A real identity provider and a real mail provider run for the SSO and email features (both were tested against local fakes).
+- A real identity provider run for SSO (tested against a local fake provider and in the browser, never against Google, Entra or similar). Email was run against Ethereal and webhooks against webhook.site, but not against a production mail provider or a Slack style receiver.
 - A shared database and external job workers if this ever needs more than one node.

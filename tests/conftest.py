@@ -12,7 +12,7 @@ DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 @pytest.fixture
 def settings(tmp_path) -> Settings:
     return Settings(
-        anthropic_api_key="test-key", upload_root=str(tmp_path / "uploads"), sample_data_dir=str(DATA_DIR),
+        llm_provider="anthropic", anthropic_api_key="test-key", upload_root=str(tmp_path / "uploads"), sample_data_dir=str(DATA_DIR),
         python_timeout_seconds=5, sql_timeout_seconds=5, max_upload_mb=2,
     )
 
