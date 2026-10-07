@@ -143,7 +143,7 @@ You can either set a server default key in `.env` (`LLM_PROVIDER` plus `GEMINI_A
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `LLM_PROVIDER` | `anthropic` | Server default provider: `gemini`, `openai` or `anthropic` |
+| `LLM_PROVIDER` | `gemini` | Server default provider: `gemini`, `openai` or `anthropic` |
 | `GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` | empty | Server default key for the chosen provider. Never sent to the browser. |
 | `LLM_MODEL` | provider default | Server default model (`gemini-2.5-flash`, `gpt-4o-mini`, `claude-sonnet-5-5`) |
 | `LLM_MAX_TOKENS` | `2048` | Max output tokens per LLM call |
@@ -299,12 +299,16 @@ Live results so far (three Gemini models, see Known limitations for the quota ca
 
 | | |
 | --- | --- |
-| ![Chart](docs/screenshots/analyst-chart.jpg) | ![Anomaly](docs/screenshots/anomaly-explanation.jpg) |
-| Answer with tool timeline and a chart | Anomaly card with a computed explanation and affected rows |
+| ![Landing](docs/screenshots/landing.jpg) | ![Chart](docs/screenshots/analyst-chart.jpg) |
+| Landing view with suggested questions generated from the schema | Answer with tool timeline and a chart |
+| ![Anomaly](docs/screenshots/anomaly-explanation.jpg) | ![Dark](docs/screenshots/dark-mode.jpg) |
+| Anomaly card with a computed explanation and affected rows | Dark theme (follows the system, switchable from the account menu) |
 | ![Overview](docs/screenshots/data-overview.jpg) | ![Quality](docs/screenshots/data-quality.jpg) |
 | Dataset overview with clipped distributions | Data quality report |
+| ![Settings](docs/screenshots/settings-key.jpg) | |
+| Bring your own Gemini or OpenAI key when the shared server key is limited | |
 
-The screenshots were captured without an API key, using the scripted stand-in LLM from the test suite. The tool calls, SQL, chart data, anomaly statistics and quality results in them are real and computed on the sample data; only the model's wording was scripted.
+The screenshots were captured without an API key, using the scripted stand-in LLM from the test suite. The tool calls, SQL, chart data, anomaly statistics and quality results in them are real and computed on the sample data; only the model's wording was scripted. They show the interface as of the redesign (left rail, teal accent, light and dark themes).
 
 ## Demo video
 
@@ -327,8 +331,8 @@ No video is bundled. A good two minute walkthrough: load sample data, open Data 
 - **Docker was verified locally, CI was not.** Both images build, `docker compose up` gives a healthy stack running as a non-root user on a read-only filesystem with state on the volume, and the Python sandbox limits hold inside the container. The GitHub Actions workflow itself has not been run.
 - **Live LLM coverage is partial.** Only Gemini was run live, across three models (`gemini-2.5-flash`, `gemini-2.5-flash-lite` and `gemini-3-flash-preview`), because the free tier allows only 20 requests per day per model. Of the 18 live cases, 16 passed. `missing_column` was answered correctly but my accepted-phrase list was too narrow, so I widened it and checked it against the saved real answer without re-running. `underperforming_products` still fails: the model chose a richer definition of "underperforming" (margins, returns, growth) than the revenue ranking the test expects, and it computed some percentages itself, which the grounding check flagged. The prompt now requires percentages and growth to be computed in SQL; that change has not been re-run live. Prompt and provider fixes were made after the first runs, so the earlier passes were not all repeated on the final prompt. OpenAI and Anthropic are covered with faked clients only.
 - **Single worker.** DuckDB files are single writer and the rate limiter and session map live in process memory. Scale vertically or run independent deployments.
-- **Accounts are deliberately basic.** There is no SSO, two-factor authentication or invitation emails: people must register first and are then added to a team by their email address. Email confirmation and password reset need SMTP and were tested against a local SMTP server, not against a real mail provider. Treat a session ID like a password.
-- **Scheduled queries are SQL only.** They store results in the app and can email a summary (status and row count, never data) to their creator. There are no webhooks. Scheduled LLM questions are not supported because API keys are never persisted.
+- **Accounts are deliberately basic.** There are no invitation emails: people must register first and are then added to a team by their email address. Two-factor sign-in (authenticator app codes) and OpenID Connect single sign-on are available. Email confirmation and password reset need SMTP and were verified against a local SMTP server and Ethereal's real SMTP and IMAP servers, not a production mail provider. SSO was verified against a local fake identity provider, not Google or Entra. Treat a session ID like a password.
+- **Scheduled queries are SQL only.** They store results in the app and can email a summary (status and row count, never data) to their creator or post a signed JSON summary to an https webhook, which was verified end to end against webhook.site. Scheduled LLM questions are not supported because API keys are never persisted.
 - **Share links are snapshots, not live dashboards.** They show the conversation as it was, they do not re-run queries, and anyone with the link can read it until it is revoked.
 - **Postgres was verified on one server version.** The connector passes 13 integration tests against a real PostgreSQL (awkward values, odd identifiers, a 200,000 row streamed import, read-only enforcement, catalog allow-listing, least-privilege accounts, error handling and the full HTTP and job flow). Run them with `bash scripts/run_postgres_tests.sh` (uses an embedded Postgres through the `pgserver` package) or point `TEST_PG_HOST`, `TEST_PG_PORT`, `TEST_PG_USER` and `TEST_PG_PASSWORD` at any server. CI runs them against a `postgres:16` service. TLS is verified through a TLS-terminating test proxy in front of the server, because the bundled test Postgres has no SSL support: `require` and `prefer` negotiate real TLS, `disable` never does, and `verify-full` rejects an untrusted certificate (`require` encrypts but does not authenticate the server, so use `verify-full` for databases with a publicly trusted certificate). Google Sheets work only for sheets shared by link (there is no OAuth). MySQL and other databases are not supported.
 - **One node.** The app database is SQLite, the job runner and scheduler are in-process threads, and DuckDB session files are single writer. This is right for one server and not for horizontal scaling.

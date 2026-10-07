@@ -9,7 +9,7 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=(".env", "../.env"), extra="ignore")
 
-    llm_provider: str = "anthropic"
+    llm_provider: str = "gemini"
     anthropic_api_key: str = ""
     gemini_api_key: str = ""
     openai_api_key: str = ""

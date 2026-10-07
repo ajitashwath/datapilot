@@ -20,6 +20,8 @@ interface ChatProps {
   resetSignal: number;
   onTurnFinished: () => void;
   onLoadSamples: () => void;
+  usingSharedKey: boolean;
+  onOpenSettings: () => void;
 }
 
 const CAPABILITIES = [
@@ -32,7 +34,7 @@ const CAPABILITIES = [
 let counter = 0;
 const nextId = () => `m${Date.now()}-${counter++}`;
 
-export default function Chat({ sessionId, dataset, datasetCount, config, llmReady, role, workspaceName, onSchedule, resetSignal, onTurnFinished, onLoadSamples }: ChatProps) {
+export default function Chat({ sessionId, dataset, datasetCount, config, llmReady, role, workspaceName, onSchedule, resetSignal, onTurnFinished, onLoadSamples, usingSharedKey, onOpenSettings }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -217,7 +219,7 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
               maxLength={2000}
               disabled={blocked}
               placeholder={!canEdit ? "Read-only workspace" : datasetCount === 0 ? "Upload a CSV to start asking questions" : "Ask a question about your data"}
-              className="max-h-40 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-[15px] outline-none placeholder:text-slate-500 disabled:cursor-not-allowed"
+              className="max-h-40 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-[15px] outline-none focus-visible:outline-none placeholder:text-slate-500 disabled:cursor-not-allowed"
             />
             {busy ? (
               <button type="button" onClick={() => abortRef.current?.abort()} className="rounded-xl bg-ink px-4 py-2 text-sm font-medium text-white hover:bg-ink/80">
@@ -229,6 +231,14 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
               </button>
             )}
           </form>
+          {usingSharedKey && canEdit && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm text-slate-700">
+              <span>You are using the shared Gemini key, which has a daily limit. Bring your own key for uninterrupted answers.</span>
+              <button onClick={onOpenSettings} className="rounded-lg bg-surface px-3 py-1.5 text-sm font-medium text-brand-700 shadow-card hover:bg-brand-50">
+                Use my own key
+              </button>
+            </div>
+          )}
           <p className="mt-2 text-center text-xs text-slate-500">Numbers come from executed queries. Check the SQL or code under each answer.</p>
         </div>
       </div>
