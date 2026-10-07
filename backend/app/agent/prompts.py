@@ -47,7 +47,7 @@ def describe_columns(profile) -> str:
     return "\n".join(parts)
 
 
-def build_context(session: Session) -> str:
+def build_context(session: Session, include_records: bool = True) -> str:
     store = session.store
     if not store.profiles:
         return "No datasets are loaded yet. Ask the user to upload a CSV file."
@@ -65,11 +65,16 @@ def build_context(session: Session) -> str:
         blocks.append(f'The user currently has "{session.active_dataset}" selected in the interface.')
     if session.filters:
         blocks.append("Active filters and focus entities: " + ", ".join(f"{k} = {v}" for k, v in session.filters.items()))
-    if session.records:
+    if session.records and include_records:
         blocks.append("Recent analysis in this conversation:")
         for i, record in enumerate(session.records[-5:], 1):
             blocks.append(f"  {i}. Q: {record.question}\n     Tools: {', '.join(record.tools) or 'none'}\n     Result: {record.result_preview}\n     A: {record.answer[:300]}")
     return "\n".join(blocks)
+
+
+def grounding_text(session: Session) -> str:
+    previews = " ".join(r.result_preview for r in session.records)
+    return build_context(session, include_records=False) + " " + previews
 
 
 def build_system_prompt(session: Session) -> str:

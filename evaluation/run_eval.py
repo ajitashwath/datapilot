@@ -10,7 +10,7 @@ sys.path.insert(0, str(ROOT / "evaluation"))
 
 from cases import CASES, DATA_DIR, GROUNDING_CHECKS, Case, Turn
 from app.agent.agent import DoneEvent, ErrorEvent, TextEvent, ToolCallEvent, ToolResultEvent, find_ungrounded_numbers, parse_numbers, run_turn
-from app.agent.llm import AnthropicProvider
+from app.agent.llm import LLMProvider, create_provider
 from app.agent.tools import result_for_llm, run_tool
 from app.config import Settings
 from app.data.datasets import DatasetStore
@@ -52,7 +52,7 @@ def run_plan(session: Session, turn: Turn) -> TurnOutcome:
     return outcome
 
 
-def run_live(session: Session, turn: Turn, llm: AnthropicProvider) -> TurnOutcome:
+def run_live(session: Session, turn: Turn, llm: LLMProvider) -> TurnOutcome:
     outcome = TurnOutcome()
     last_step_text: dict[int, str] = {}
     for event in run_turn(session, turn.question, llm):
@@ -119,7 +119,7 @@ def evaluate_turn(turn: Turn, outcome: TurnOutcome, live: bool, session: Session
     return checks
 
 
-def run_case(case: Case, live: bool, settings: Settings, llm: AnthropicProvider | None) -> dict:
+def run_case(case: Case, live: bool, settings: Settings, llm: LLMProvider | None) -> dict:
     session = make_session(settings)
     checks: list[Check] = []
     try:
@@ -145,14 +145,16 @@ def run_grounding_checks() -> list[dict]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Evaluate the DataPilot analyst against ground truth computed with pandas.")
     parser.add_argument("--mode", choices=["tools", "live"], default="tools", help="tools runs reference plans on the real tools, live also calls the LLM")
+    parser.add_argument("--only", help="comma separated case ids to run")
     parser.add_argument("--out", default=str(ROOT / "evaluation" / "results" / "latest.json"))
     args = parser.parse_args()
     logger.disabled = True
     live = args.mode == "live"
     settings = Settings()
-    llm = AnthropicProvider(settings) if live else None
-    cases = [c for c in CASES if live or not c.live_only]
-    results = [run_case(c, live, settings, llm) for c in cases] + run_grounding_checks()
+    llm = create_provider(settings) if live else None
+    wanted = set(args.only.split(",")) if args.only else None
+    cases = [c for c in CASES if (live or not c.live_only) and (wanted is None or c.id in wanted)]
+    results = [run_case(c, live, settings, llm) for c in cases] + ([] if wanted else run_grounding_checks())
 
     width = max(len(r["id"]) for r in results)
     for r in results:
