@@ -74,5 +74,5 @@ The interface was redesigned around design tokens: a left rail (workspace, views
 - Re-run the whole live evaluation on one model with a paid key, so every case runs on the final prompt, and re-check `underperforming_products`.
 - Run OpenAI and Anthropic live, and test Postgres TLS against a server with a private CA.
 - Move `execute_python` into a network-less sandbox container if it must stay enabled for untrusted users.
-- A real identity provider run for SSO (tested against a local fake provider and in the browser, never against Google, Entra or similar). Email was run against Ethereal and webhooks against webhook.site, but not against a production mail provider or a Slack style receiver.
+- SSO was verified against a real Keycloak 26 server in Docker (full browser login, account creation, repeat sign-in) but not against Google, Entra or Okta. Email was run against Ethereal and webhooks against webhook.site, but not against a production mail provider or a Slack style receiver.
 - A shared database and external job workers if this ever needs more than one node.
