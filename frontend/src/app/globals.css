@@ -4,11 +4,76 @@
 
 :root {
   color-scheme: light;
+  --slate-50: 245 247 250;
+  --slate-100: 237 240 245;
+  --slate-200: 224 229 237;
+  --slate-300: 202 210 222;
+  --slate-400: 146 158 177;
+  --slate-500: 98 111 131;
+  --slate-600: 70 83 103;
+  --slate-700: 50 61 80;
+  --slate-800: 30 41 59;
+  --slate-900: 15 23 42;
+  --brand-50: 232 247 245;
+  --brand-100: 200 238 233;
+  --brand-500: 20 150 138;
+  --brand-600: 15 118 110;
+  --brand-700: 17 94 89;
+  --surface: 255 255 255;
+  --ink: 30 41 59;
+  --code: 15 23 42;
+  --code-fg: 226 232 240;
+  --shadow: 15 23 42;
+}
+
+html.dark {
+  color-scheme: dark;
+  --slate-50: 10 13 19;
+  --slate-100: 23 28 39;
+  --slate-200: 40 47 62;
+  --slate-300: 60 70 90;
+  --slate-400: 120 132 153;
+  --slate-500: 150 162 180;
+  --slate-600: 172 182 198;
+  --slate-700: 203 211 224;
+  --slate-800: 228 233 241;
+  --slate-900: 245 248 251;
+  --brand-50: 14 44 43;
+  --brand-100: 19 68 65;
+  --brand-500: 45 190 175;
+  --brand-600: 15 118 110;
+  --brand-700: 13 98 92;
+  --surface: 17 21 30;
+  --ink: 51 65 85;
+  --code: 6 9 15;
+  --code-fg: 226 232 240;
+  --shadow: 0 0 0;
 }
 
 body {
   @apply bg-slate-50 text-slate-800 antialiased;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "cv11", "ss01";
+}
+
+@layer base {
+  input,
+  select,
+  textarea {
+    background-color: rgb(var(--surface));
+    color: rgb(var(--slate-800));
+  }
+
+  ::placeholder {
+    color: rgb(var(--slate-500));
+    opacity: 1;
+  }
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.015em;
 }
 
 .scroll-thin::-webkit-scrollbar {
@@ -18,6 +83,78 @@ body {
 
 .scroll-thin::-webkit-scrollbar-thumb {
   @apply rounded-full bg-slate-300;
+}
+
+.hero-glow {
+  background-image: radial-gradient(60% 80% at 20% 0%, rgb(var(--brand-500) / 0.16), transparent 70%),
+    radial-gradient(50% 70% at 90% 10%, rgb(14 165 233 / 0.12), transparent 70%);
+}
+
+html.dark .text-brand-600,
+html.dark .text-brand-700,
+html.dark .hover\:text-brand-600:hover,
+html.dark .hover\:text-brand-700:hover {
+  color: rgb(94 234 212);
+}
+
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-100 {
+  background-color: rgb(16 185 129 / 0.14);
+}
+
+html.dark .bg-rose-50,
+html.dark .bg-rose-100 {
+  background-color: rgb(244 63 94 / 0.14);
+}
+
+html.dark .bg-amber-50,
+html.dark .bg-amber-100 {
+  background-color: rgb(245 158 11 / 0.14);
+}
+
+html.dark .bg-sky-100,
+html.dark .bg-violet-100 {
+  background-color: rgb(99 102 241 / 0.18);
+}
+
+html.dark .text-emerald-700,
+html.dark .text-emerald-800 {
+  color: rgb(110 231 183);
+}
+
+html.dark .text-rose-600,
+html.dark .text-rose-700 {
+  color: rgb(253 164 175);
+}
+
+html.dark .text-amber-700,
+html.dark .text-amber-800 {
+  color: rgb(252 211 77);
+}
+
+html.dark .text-sky-700,
+html.dark .text-violet-700 {
+  color: rgb(165 180 252);
+}
+
+html.dark .ring-emerald-200,
+html.dark .ring-amber-200,
+html.dark .ring-amber-300,
+html.dark .ring-rose-200,
+html.dark .ring-sky-200 {
+  --tw-ring-color: rgb(255 255 255 / 0.12);
+}
+
+.recharts-cartesian-axis-tick text {
+  fill: rgb(var(--slate-500));
+}
+
+.recharts-cartesian-grid line {
+  stroke: rgb(var(--slate-200));
+}
+
+.recharts-cartesian-axis-line {
+  stroke: rgb(var(--slate-300));
 }
 
 @keyframes pulse-dot {
@@ -43,7 +180,7 @@ select:focus-visible,
 textarea:focus-visible,
 summary:focus-visible,
 a:focus-visible {
-  outline: 2px solid #4f46e5;
+  outline: 2px solid rgb(var(--brand-500));
   outline-offset: 2px;
 }
 

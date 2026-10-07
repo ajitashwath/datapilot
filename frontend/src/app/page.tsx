@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import AccountMenu from "@/components/AccountMenu";
 import AuthGate from "@/components/AuthGate";
+import ChangePasswordDialog from "@/components/ChangePasswordDialog";
+import TwoFactorDialog from "@/components/TwoFactorDialog";
 import Chat from "@/components/Chat";
 import ConnectDialog from "@/components/ConnectDialog";
 import DataExplorer from "@/components/DataExplorer";
@@ -74,6 +77,9 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [scheduleSql, setScheduleSql] = useState<string | null>(null);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [managingTwoFactor, setManagingTwoFactor] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const accounts = config?.auth_mode === "accounts";
   const readOnly = state?.role === "reader";
@@ -300,25 +306,28 @@ export default function Home() {
   const selectedProfile = state?.datasets.find((d) => d.profile.name === selected)?.profile ?? null;
   const hasLinkedData = Boolean(state?.datasets.some((d) => d.profile.source?.startsWith("url:")));
 
+  const needsKey = config !== null && !config.llm_configured && !state?.llm;
+  const navClass = (active: boolean) =>
+    `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${active ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`;
+
   return (
-    <div className="flex h-screen flex-col">
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 sm:px-5 sm:py-3">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Open datasets panel"
-            className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 ring-1 ring-slate-200 md:hidden"
-          >
-            Datasets
-          </button>
-          <div aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-violet-500 text-sm font-bold text-white">
+    <div className="flex h-screen bg-slate-50">
+      {sidebarOpen && <button aria-label="Close menu" onClick={() => setSidebarOpen(false)} className="fixed inset-0 z-30 bg-black/50 md:hidden" />}
+      <aside
+        aria-label="Workspace"
+        className={`${sidebarOpen ? "fixed inset-y-0 left-0 z-40 flex" : "hidden md:flex"} w-72 max-w-[85vw] shrink-0 flex-col border-r border-slate-200 bg-surface`}
+      >
+        <div className="flex items-center gap-3 px-4 pb-3 pt-4">
+          <div aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-sky-500 text-sm font-bold text-white shadow-card">
             DP
           </div>
           <div>
             <h1 className="text-base font-semibold leading-tight text-slate-900">DataPilot</h1>
-            <p className="hidden text-xs text-slate-600 sm:block">AI data analyst with verified computations</p>
+            <p className="text-xs text-slate-500">Verified answers from your data</p>
           </div>
-          {accounts && user && (
+        </div>
+        {accounts && user && (
+          <div className="px-3">
             <WorkspaceMenu
               user={user}
               state={state}
@@ -331,49 +340,32 @@ export default function Home() {
               }}
               onError={(text) => setNotice({ kind: "error", text })}
             />
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          <nav aria-label="View" className="flex rounded-lg bg-slate-100 p-1">
-            {(["analyst", "data"] as View[]).map((v) => (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                aria-pressed={view === v}
-                className={`rounded-md px-3 py-1 text-sm font-medium transition ${view === v ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
-              >
-                {v === "analyst" ? "Analyst" : "Data explorer"}
-              </button>
-            ))}
-          </nav>
-          <SettingsPanel
-            config={config}
-            sessionId={sessionId}
-            llm={state?.llm ?? null}
-            onSaveLlm={handleSaveLlm}
-            onClearLlm={handleClearLlm}
-            onClearConversation={handleClearConversation}
-            onNewSession={handleNewSession}
-          />
-          {accounts && user && (
-            <button onClick={handleSignOut} className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50" aria-label={`Sign out ${user.name}`}>
-              Sign out
+          </div>
+        )}
+        <nav aria-label="View" className="space-y-1 px-3 pt-3">
+          {(["analyst", "data"] as View[]).map((v) => (
+            <button
+              key={v}
+              onClick={() => {
+                setView(v);
+                setSidebarOpen(false);
+              }}
+              aria-pressed={view === v}
+              className={navClass(view === v)}
+            >
+              <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                {v === "analyst" ? <path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h9A2.5 2.5 0 0 1 17 5.5v6a2.5 2.5 0 0 1-2.5 2.5H9l-3.5 3v-3A2.5 2.5 0 0 1 3 11.5z" /> : <path d="M3 5h14M3 10h14M3 15h14M8 3v14" />}
+              </svg>
+              {v === "analyst" ? "Analyst" : "Data explorer"}
             </button>
-          )}
-        </div>
-      </header>
-
-      {notice && (
-        <div className={`flex items-center justify-between px-5 py-2 text-sm ${notice.kind === "error" ? "bg-rose-50 text-rose-700" : "bg-brand-50 text-brand-700"}`}>
-          <span role={notice.kind === "error" ? "alert" : "status"}>{notice.text}</span>
-          <button onClick={() => setNotice(null)} className="font-medium underline">
-            Dismiss
+          ))}
+        </nav>
+        {needsKey && (
+          <button onClick={() => setSettingsOpen(true)} className="mx-3 mt-3 rounded-lg bg-amber-50 px-3 py-2 text-left text-sm font-medium text-amber-800 ring-1 ring-amber-300 hover:bg-amber-100">
+            Add an API key to start asking questions
           </button>
-        </div>
-      )}
-
-      <div className="flex min-h-0 flex-1">
-        <div className={sidebarOpen ? "fixed inset-0 z-30 flex" : "hidden md:flex"}>
+        )}
+        <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-3 py-4">
           <Sidebar
             state={state}
             config={config}
@@ -403,9 +395,37 @@ export default function Home() {
             }}
             onClearFilters={handleClearFilters}
           />
-          {sidebarOpen && <button aria-label="Close datasets panel" onClick={() => setSidebarOpen(false)} className="flex-1 bg-slate-900/40 md:hidden" />}
         </div>
-        <main className="min-w-0 flex-1">
+        <div className="border-t border-slate-200 p-2">
+          <AccountMenu
+            user={accounts ? user : null}
+            twoFactor={Boolean(config?.two_factor_available)}
+            onSettings={() => setSettingsOpen(true)}
+            onPassword={() => setChangingPassword(true)}
+            onTwoFactor={() => setManagingTwoFactor(true)}
+            onSignOut={handleSignOut}
+          />
+        </div>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex items-center gap-3 border-b border-slate-200 bg-surface px-3 py-2 md:hidden">
+          <button onClick={() => setSidebarOpen(true)} aria-label="Open menu" className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200">
+            Menu
+          </button>
+          <span className="text-sm font-semibold text-slate-900">{state?.name ?? "DataPilot"}</span>
+        </div>
+
+        {notice && (
+          <div className={`flex items-center justify-between px-5 py-2 text-sm ${notice.kind === "error" ? "bg-rose-50 text-rose-700" : "bg-brand-50 text-brand-700"}`}>
+            <span role={notice.kind === "error" ? "alert" : "status"}>{notice.text}</span>
+            <button onClick={() => setNotice(null)} className="font-medium underline">
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        <main className="min-h-0 min-w-0 flex-1">
           {sessionId && (
             <div className={view === "analyst" ? "h-full" : "hidden"}>
               <Chat
@@ -430,11 +450,26 @@ export default function Home() {
               canEdit={!readOnly}
               minMinutes={config?.schedule_min_minutes ?? 15}
               hasLinkedData={hasLinkedData}
+              emailEnabled={Boolean(config?.email_enabled)}
             />
           )}
         </main>
       </div>
 
+      {settingsOpen && (
+        <SettingsPanel
+          config={config}
+          sessionId={sessionId}
+          llm={state?.llm ?? null}
+          onSaveLlm={handleSaveLlm}
+          onClearLlm={handleClearLlm}
+          onClearConversation={handleClearConversation}
+          onNewSession={handleNewSession}
+          onClose={() => setSettingsOpen(false)}
+        />
+      )}
+      {changingPassword && <ChangePasswordDialog onClose={() => setChangingPassword(false)} />}
+      {managingTwoFactor && <TwoFactorDialog onClose={() => setManagingTwoFactor(false)} />}
       {connecting && sessionId && (
         <ConnectDialog sessionId={sessionId} allowPrivate={Boolean(config?.allow_private_connections)} onClose={() => setConnecting(false)} onImported={handleImported} />
       )}
@@ -444,6 +479,7 @@ export default function Home() {
           initialSql={scheduleSql}
           minMinutes={config?.schedule_min_minutes ?? 15}
           hasLinkedData={hasLinkedData}
+          emailEnabled={Boolean(config?.email_enabled)}
           onClose={() => setScheduleSql(null)}
           onCreated={() => setNotice({ kind: "info", text: "Schedule created. Results appear under Data explorer, Schedules." })}
         />

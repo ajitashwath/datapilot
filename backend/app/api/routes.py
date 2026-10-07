@@ -65,6 +65,8 @@ def get_config(request: Request) -> AppConfig:
         sample_datasets=[p.name for p in sample_files(s)], auth_required=bool(s.access_token) or s.auth_mode == "accounts",
         python_enabled=s.sandbox_mode != "off", auth_mode=s.auth_mode, registration_open=s.registration == "open",
         schedule_min_minutes=s.schedule_min_minutes, allow_private_connections=s.allow_private_connections,
+        email_enabled=s.email_enabled(), email_verification_required=s.require_email_verification and s.email_enabled(),
+        two_factor_available=s.auth_mode == "accounts" and bool(s.secret_key),
     )
 
 

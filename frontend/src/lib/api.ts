@@ -2,6 +2,8 @@ import { parseSseChunk } from "./sse";
 import type {
   AppConfig,
   AuthResponse,
+  TwoFactorSetup,
+  TwoFactorStatus,
   JobStatus,
   Member,
   PostgresConnection,
@@ -162,6 +164,18 @@ export const register = (body: { email: string; password: string; name: string }
 export const login = (body: { email: string; password: string }) => request<AuthResponse>("/api/auth/login", json(body));
 export const logout = () => request<{ signed_out: boolean }>("/api/auth/logout", { method: "POST" });
 export const getMe = () => request<User>("/api/auth/me");
+export const forgotPassword = (email: string) => request<{ sent: boolean }>("/api/auth/forgot", json({ email }));
+export const resetPassword = (token: string, password: string) => request<{ reset: boolean }>("/api/auth/reset", json({ token, password }));
+export const verifyEmail = (token: string) => request<{ verified: boolean }>("/api/auth/verify", json({ token }));
+export const resendVerification = (email: string) => request<{ sent: boolean }>("/api/auth/resend-verification", json({ email }));
+export const changePassword = (current_password: string, new_password: string) =>
+  request<{ changed: boolean }>("/api/auth/password", json({ current_password, new_password }));
+
+export const loginWithCode = (challenge: string, code: string) => request<AuthResponse>("/api/auth/login/2fa", json({ challenge, code }));
+export const twoFactorStatus = () => request<TwoFactorStatus>("/api/auth/2fa");
+export const twoFactorSetup = (password: string) => request<TwoFactorSetup>("/api/auth/2fa/setup", json({ password }));
+export const twoFactorEnable = (code: string) => request<{ recovery_codes: string[] }>("/api/auth/2fa/enable", json({ code }));
+export const twoFactorDisable = (password: string, code: string) => request<{ disabled: boolean }>("/api/auth/2fa/disable", json({ password, code }));
 
 export const listTeams = () => request<Team[]>("/api/teams");
 export const createTeam = (name: string) => request<Team>("/api/teams", json({ name }));
@@ -179,7 +193,7 @@ export const revokeShare = (id: string, token: string) => request<{ revoked: boo
 export const getShared = (token: string) => request<SharedSnapshot>(`/api/shared/${encodeURIComponent(token)}`);
 
 export const listSchedules = (id: string) => request<Schedule[]>(`/api/sessions/${id}/schedules`);
-export const createSchedule = (id: string, body: { name: string; sql: string; every_minutes: number; refresh_sources: boolean }) =>
+export const createSchedule = (id: string, body: { name: string; sql: string; every_minutes: number; refresh_sources: boolean; notify: string; webhook_url?: string }) =>
   request<Schedule>(`/api/sessions/${id}/schedules`, json(body));
 export const toggleSchedule = (id: string, scheduleId: string, enabled: boolean) =>
   request<Schedule>(`/api/sessions/${id}/schedules/${scheduleId}`, patch({ enabled }));

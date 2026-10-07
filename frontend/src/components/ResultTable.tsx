@@ -9,7 +9,7 @@ export default function ResultTable({ table, pageSize = 10 }: { table: TableResu
   const [expanded, setExpanded] = useState(false);
   const rows = expanded ? table.rows : table.rows.slice(0, pageSize);
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-lg border border-slate-200 bg-surface">
       <div tabIndex={0} role="region" aria-label="Result rows" className="scroll-thin max-h-96 overflow-auto">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">Query result</caption>

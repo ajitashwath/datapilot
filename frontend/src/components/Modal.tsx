@@ -15,11 +15,13 @@ export default function Modal({ title, onClose, children, wide = false }: { titl
     <dialog
       ref={ref}
       aria-label={title}
-      onClose={onClose}
+      onClose={() => {
+        if (!ref.current?.open) onClose();
+      }}
       onClick={(event) => {
         if (event.target === ref.current) onClose();
       }}
-      className={`m-auto w-[calc(100%-2rem)] rounded-2xl border border-slate-200 bg-white p-0 shadow-2xl backdrop:bg-slate-900/40 ${wide ? "max-w-2xl" : "max-w-md"}`}
+      className={`m-auto w-[calc(100%-2rem)] rounded-2xl border border-slate-200 bg-surface p-0 text-slate-800 shadow-float backdrop:bg-black/50 ${wide ? "max-w-2xl" : "max-w-md"}`}
     >
       <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
         <h2 className="text-base font-semibold text-slate-900">{title}</h2>

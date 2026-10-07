@@ -17,7 +17,7 @@ export default function CodeBlock({ label, code, action }: { label: string; code
 
   return (
     <div className="relative">
-    <details className="group rounded-lg border border-slate-200 bg-white">
+    <details className="group rounded-lg border border-slate-200 bg-surface">
       <summary className={`flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 ${action ? "pr-28" : ""}`}>
         <span className="text-slate-500 transition group-open:rotate-90">&#9656;</span>
         {label}
@@ -26,7 +26,7 @@ export default function CodeBlock({ label, code, action }: { label: string; code
         <button onClick={copy} className="absolute right-2 top-2 rounded bg-slate-700 px-2 py-0.5 text-xs text-white hover:bg-slate-600">
           {copied ? "Copied" : "Copy"}
         </button>
-        <pre tabIndex={0} aria-label="Code" className="scroll-thin overflow-x-auto rounded-b-lg bg-slate-900 p-3 pr-16 text-xs leading-relaxed text-slate-100">
+        <pre tabIndex={0} aria-label="Code" className="scroll-thin overflow-x-auto rounded-b-lg bg-code p-3 pr-16 text-xs leading-relaxed text-code-fg">
           <code>{code}</code>
         </pre>
       </div>

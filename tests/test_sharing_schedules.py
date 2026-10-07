@@ -123,6 +123,16 @@ class TestSchedules:
             listed = client.get(f"/api/sessions/{sid}/schedules").json()
             assert listed[0]["last_run"]["ok"] and listed[0]["last_run"]["row_count"] == 5
 
+    def test_row_count_is_the_real_total_even_though_only_fifty_rows_are_stored(self, quiet):
+        with start(quiet) as client:
+            sid = client.post("/api/sessions").json()["session_id"]
+            client.post(f"/api/sessions/{sid}/samples")
+            body = {"name": "All orders", "sql": "SELECT * FROM orders", "every_minutes": 60}
+            schedule_id = client.post(f"/api/sessions/{sid}/schedules", json=body).json()["id"]
+            run = client.post(f"/api/sessions/{sid}/schedules/{schedule_id}/run").json()["run"]
+            assert run["row_count"] == 7044
+            assert len(run["rows"]) == 50
+
     def test_scheduler_runs_due_schedules_and_advances_them(self, quiet):
         with start(quiet) as client:
             sid, created = self.make(client, every_minutes=30)

@@ -14,7 +14,7 @@ Edit `.env`:
 | --- | --- |
 | `ACCESS_TOKEN` | Shared access token login for a single team. Without it, and without accounts, anyone who can reach the server can use it. |
 | `AUTH_MODE=accounts` | Per-user accounts, workspaces, teams and roles. Pair with `REGISTRATION=closed` or `ALLOWED_EMAIL_DOMAIN=yourcompany.com` to control who can sign up. |
-| `SECRET_KEY` | A Fernet key (`python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`). Used to encrypt API keys held in memory. If unset, a random key is generated at each start. |
+| `SECRET_KEY` | A Fernet key (`python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`). Used to encrypt API keys held in memory and two-factor secrets. If unset, a random key is generated at each start and two-factor sign-in is unavailable. |
 | `LLM_PROVIDER` and the matching `*_API_KEY` | Optional shared key. Leave empty to make every user bring their own key in Settings. |
 | `SERVER_KEY_TURN_LIMIT` | Questions one session may ask on the shared key (default 100). Users who add their own key are exempt. |
 | `CHAT_PER_MINUTE`, `UPLOAD_PER_MINUTE`, `SESSION_CREATE_PER_HOUR` | Per client IP rate limits (defaults 12, 20, 30). |
@@ -50,6 +50,32 @@ DuckDB files are single writer and the rate limiter and session map are in proce
 - Passwords are hashed with scrypt and sign-in tokens are stored hashed. Accounts, teams, share links and schedules live in `app.db` next to the session folders (SQLite, WAL mode).
 - Workspaces owned by a user never expire. Anonymous workspaces expire after `SESSION_TTL_MINUTES` unless they have an active schedule. Set it to `0` to disable expiry.
 - Public share links expose a snapshot of a conversation (tables, SQL, charts) to anyone with the URL until revoked. Put the site behind your normal access controls if links must stay inside your network, or disable sharing by not giving users the owner role.
+
+## Two-factor sign-in
+
+Accounts mode offers authenticator app codes (TOTP, any standard app). Set a stable `SECRET_KEY`; without one the option is hidden, because the stored secrets could not be read after a restart. Users turn it on from the 2FA button, which shows a QR code and 10 single-use recovery codes. Sign-in then asks for a code after the password, and a password reset does not skip it.
+
+If someone loses both their phone and their recovery codes, an administrator can turn it off from the server:
+
+```bash
+cd backend && python -m app.admin disable-2fa user@example.com
+```
+
+That also signs the account out everywhere. Run it with the same environment (`UPLOAD_ROOT`) as the server.
+
+## Email (optional)
+
+Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` and `PUBLIC_URL` (the address people use to reach the site, because it goes into every emailed link). Leave `SMTP_SECURITY=starttls` for port 587, or `ssl` for port 465. With email on you get forgot-password, change-password notices, optional email confirmation (`REQUIRE_EMAIL_VERIFICATION=true`) and email notifications for scheduled queries. Without it those features stay hidden and sign-up works as before.
+
+- Existing accounts are treated as confirmed when you switch confirmation on.
+- Use a dedicated sending address with SPF and DKIM set up, or reset emails will land in spam.
+- Delivery failures are logged (`email_failed`) and counted in `datapilot_emails_total{status="failed"}`; the request that triggered the email still succeeds so the form never reveals whether an address exists.
+
+## Webhook notifications
+
+A schedule can also post to a webhook address, using the same "only on failure" or "after every run" setting as email. It works without email being set up. The body is a small JSON summary (schedule name, workspace id, ok, row count, error text) and never contains query results. Each request carries `X-DataPilot-Signature: sha256=<hex>`, the HMAC SHA-256 of the raw body with a per-schedule secret that is shown once when the schedule is created.
+
+Addresses must be https, without embedded credentials, and resolve to public addresses (checked again on every send, with the connection pinned to the checked address). Redirects are not followed, and the delivery outcome is written to the run's note. Set `ALLOW_PRIVATE_CONNECTIONS=true` only on a trusted network, since it also allows plain http and private targets. The address itself is never shown back in the interface, only its host, because many services put a secret in the path. The signing secret is stored in the app database as plain text so it can be used to sign.
 
 ## Connectors and schedules
 

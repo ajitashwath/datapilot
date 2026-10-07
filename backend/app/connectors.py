@@ -30,7 +30,7 @@ class PostgresConnection(BaseModel):
     dbname: str = Field(min_length=1, max_length=63)
     user: str = Field(min_length=1, max_length=63)
     password: SecretStr = Field(max_length=200)
-    sslmode: str = Field("require", pattern="^(require|prefer|disable)$")
+    sslmode: str = Field("require", pattern="^(verify-full|require|prefer|disable)$")
 
 
 def public_addresses(host: str, port: int, allow_private: bool) -> list[str]:

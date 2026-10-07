@@ -104,41 +104,46 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
 
   return (
     <div className="flex h-full flex-col">
-      <div className="scroll-thin flex-1 overflow-y-auto px-4 py-6 sm:px-8">
+      <div className={`scroll-thin flex-1 overflow-y-auto px-4 py-6 sm:px-8 ${messages.length === 0 ? "hero-glow" : ""}`}>
         <div className="mx-auto max-w-3xl space-y-6" role="log" aria-label="Conversation" aria-live="polite">
           {messages.length > 0 && !busy && (
             <div className="flex justify-end gap-2">
               {role === "owner" && (
-                <button onClick={() => setSharing(true)} className="rounded-lg px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-white">
+                <button onClick={() => setSharing(true)} className="rounded-lg px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-surface">
                   Share
                 </button>
               )}
               <button
                 onClick={() => downloadText("datapilot-report.md", buildReport(messages, dataset ? `Analysis of ${dataset}` : "Analysis report"), "text/markdown")}
-                className="rounded-lg px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-white"
+                className="rounded-lg px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-surface"
               >
                 Export report
               </button>
             </div>
           )}
           {messages.length === 0 && (
-            <div className="pt-6">
+            <div className="pt-8 sm:pt-14">
               {datasetCount === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-card">
-                  <h2 className="text-xl font-semibold text-slate-900">Start by adding some data</h2>
+                <div className="rounded-3xl border border-slate-200 bg-surface p-10 text-center shadow-card">
+                  <div aria-hidden="true" className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+                    <svg viewBox="0 0 20 20" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 16V9m4 7V4m4 12v-5m4 5V7" />
+                    </svg>
+                  </div>
+                  <h2 className="mt-4 text-2xl font-semibold text-slate-900">Start by adding some data</h2>
                   <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
                     Drop one or more CSV files into the panel on the left, or try the bundled sales, customers and products sample data.
                   </p>
                   {config && config.sample_datasets.length > 0 && (
-                    <button onClick={onLoadSamples} className="mt-5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
+                    <button onClick={onLoadSamples} className="mt-6 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-medium text-white shadow-card hover:bg-brand-700">
                       Load sample data
                     </button>
                   )}
                 </div>
               ) : (
                 <div>
-                  <h2 className="text-2xl font-semibold text-slate-900">What would you like to know?</h2>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <h2 className="bg-gradient-to-r from-slate-900 to-brand-500 bg-clip-text text-3xl font-semibold text-transparent sm:text-4xl">What would you like to know?</h2>
+                  <p className="mt-2 text-sm text-slate-500">
                     Answers are computed on your real data with SQL and Python. Currently focused on <span className="font-medium text-slate-700">{dataset ?? "all datasets"}</span>.
                   </p>
                   <div className="mt-5 grid gap-2 sm:grid-cols-2">
@@ -147,15 +152,18 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
                         key={q}
                         onClick={() => send(q)}
                         disabled={blocked}
-                        className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-700 shadow-card transition hover:border-brand-500 hover:text-brand-700 disabled:opacity-50"
+                        className="group flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-surface px-4 py-3.5 text-left text-sm text-slate-700 shadow-card transition hover:-translate-y-0.5 hover:border-brand-500 hover:shadow-float disabled:opacity-50"
                       >
-                        {q}
+                        <span>{q}</span>
+                        <span aria-hidden="true" className="text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-brand-600">
+                          &rarr;
+                        </span>
                       </button>
                     ))}
                   </div>
-                  <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                  <div className="mt-10 grid gap-3 sm:grid-cols-2">
                     {CAPABILITIES.map((c) => (
-                      <div key={c.title} className="rounded-xl bg-white/60 p-4 ring-1 ring-slate-200">
+                      <div key={c.title} className="rounded-2xl bg-surface/60 p-4 ring-1 ring-slate-200">
                         <p className="text-sm font-semibold text-slate-800">{c.title}</p>
                         <p className="mt-1 text-sm text-slate-500">{c.text}</p>
                       </div>
@@ -168,7 +176,7 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
           {messages.map((m, i) =>
             m.role === "user" ? (
               <div key={m.id} className="flex justify-end">
-                <div className="max-w-[85%] rounded-2xl rounded-tr-md bg-brand-600 px-4 py-2.5 text-[15px] text-white shadow-card">{m.text}</div>
+                <div className="max-w-[85%] rounded-2xl rounded-tr-md bg-gradient-to-br from-brand-600 to-brand-700 px-4 py-2.5 text-[15px] text-white shadow-card">{m.text}</div>
               </div>
             ) : (
               <AssistantMessage key={m.id} message={m} onRetry={() => retry(i)} onSchedule={canEdit ? onSchedule : undefined} />
@@ -178,7 +186,7 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
         </div>
       </div>
 
-      <div className="border-t border-slate-200 bg-white/80 px-4 py-4 backdrop-blur sm:px-8">
+      <div className="bg-gradient-to-t from-slate-50 via-slate-50 to-transparent px-4 pb-4 pt-2 sm:px-8">
         <div className="mx-auto max-w-3xl">
           {!canEdit && (
             <p className="mb-2 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-700">You have read-only access to this workspace, so asking new questions is disabled.</p>
@@ -193,7 +201,7 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
               e.preventDefault();
               send(input);
             }}
-            className="flex items-end gap-2 rounded-2xl border border-slate-300 bg-white p-2 shadow-card focus-within:border-brand-500"
+            className="flex items-end gap-2 rounded-3xl border border-slate-200 bg-surface p-2 pl-4 shadow-float focus-within:border-brand-500"
           >
             <textarea
               aria-label="Ask a question about your data"
@@ -212,11 +220,11 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
               className="max-h-40 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-[15px] outline-none placeholder:text-slate-500 disabled:cursor-not-allowed"
             />
             {busy ? (
-              <button type="button" onClick={() => abortRef.current?.abort()} className="rounded-xl bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+              <button type="button" onClick={() => abortRef.current?.abort()} className="rounded-xl bg-ink px-4 py-2 text-sm font-medium text-white hover:bg-ink/80">
                 Stop
               </button>
             ) : (
-              <button type="submit" disabled={blocked || !input.trim()} className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40">
+              <button type="submit" disabled={blocked || !input.trim()} className="rounded-2xl bg-brand-600 px-5 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40">
                 Ask
               </button>
             )}

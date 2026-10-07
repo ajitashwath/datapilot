@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import Modal from "./Modal";
 import type { AppConfig } from "@/lib/types";
 
 interface SettingsPanelProps {
+  onClose: () => void;
   config: AppConfig | null;
   sessionId: string | null;
   llm: { provider: string; model: string } | null;
@@ -62,7 +64,7 @@ function ProviderForm({ config, llm, onSave, onClear }: { config: AppConfig | nu
         </p>
       )}
       <form onSubmit={submit} className="mt-2 space-y-2">
-        <select aria-label="AI provider" value={provider} onChange={(e) => setProvider(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm">
+        <select aria-label="AI provider" value={provider} onChange={(e) => setProvider(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-surface px-2 py-1.5 text-sm">
           {PROVIDERS.map((p) => (
             <option key={p.id} value={p.id}>
               {p.label}
@@ -94,67 +96,47 @@ function ProviderForm({ config, llm, onSave, onClear }: { config: AppConfig | nu
   );
 }
 
-export default function SettingsPanel({ config, sessionId, llm, onSaveLlm, onClearLlm, onClearConversation, onNewSession }: SettingsPanelProps) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement | null>(null);
-  const needsKey = config !== null && !config.llm_configured && !llm;
-
-  useEffect(() => {
-    function close(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, []);
-
+export default function SettingsPanel({ config, sessionId, llm, onSaveLlm, onClearLlm, onClearConversation, onNewSession, onClose }: SettingsPanelProps) {
   return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className={`rounded-lg px-3 py-1.5 text-sm font-medium ring-1 ${needsKey ? "bg-amber-50 text-amber-800 ring-amber-300" : "text-slate-600 ring-slate-200 hover:bg-slate-50"}`}
-      >
-        {needsKey ? "Add API key" : "Settings"}
-      </button>
-      {open && (
-        <div className="absolute right-0 z-20 mt-2 max-h-[80vh] w-80 space-y-4 overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
-          <ProviderForm config={config} llm={llm} onSave={onSaveLlm} onClear={onClearLlm} />
-          <div>
-            <h2 className="mb-2 text-sm font-semibold text-slate-900">Server limits</h2>
-            {config ? (
-              <dl className="space-y-2">
-                <Row label="Upload limit" value={`${config.max_upload_mb} MB per file`} />
-                <Row label="Datasets per session" value={String(config.max_files_per_session)} />
-                <Row label="SQL timeout" value={`${config.sql_timeout_seconds} s`} />
-                <Row label="Python timeout" value={`${config.python_timeout_seconds} s`} />
-                <Row label="Rows per result" value={String(config.max_result_rows)} />
-              </dl>
-            ) : (
-              <p className="text-sm text-slate-500">Server not reachable.</p>
-            )}
-          </div>
-          {sessionId && <p className="truncate text-xs text-slate-500">Session {sessionId}</p>}
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                onClearConversation();
-                setOpen(false);
-              }}
-              className="flex-1 rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200"
-            >
-              Clear chat
-            </button>
-            <button
-              onClick={() => {
-                onNewSession();
-                setOpen(false);
-              }}
-              className="flex-1 rounded-lg bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-100"
-            >
-              New session
-            </button>
-          </div>
+    <Modal title="Settings" onClose={onClose}>
+      <div className="space-y-5">
+        <ProviderForm config={config} llm={llm} onSave={onSaveLlm} onClear={onClearLlm} />
+        <div>
+          <h2 className="mb-2 text-sm font-semibold text-slate-900">Server limits</h2>
+          {config ? (
+            <dl className="space-y-2">
+              <Row label="Upload limit" value={`${config.max_upload_mb} MB per file`} />
+              <Row label="Datasets per session" value={String(config.max_files_per_session)} />
+              <Row label="SQL timeout" value={`${config.sql_timeout_seconds} s`} />
+              <Row label="Python timeout" value={`${config.python_timeout_seconds} s`} />
+              <Row label="Rows per result" value={String(config.max_result_rows)} />
+            </dl>
+          ) : (
+            <p className="text-sm text-slate-500">Server not reachable.</p>
+          )}
         </div>
-      )}
-    </div>
+        {sessionId && <p className="truncate text-xs text-slate-500">Session {sessionId}</p>}
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              onClearConversation();
+              onClose();
+            }}
+            className="flex-1 rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200"
+          >
+            Clear chat
+          </button>
+          <button
+            onClick={() => {
+              onNewSession();
+              onClose();
+            }}
+            className="flex-1 rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100"
+          >
+            New session
+          </button>
+        </div>
+      </div>
+    </Modal>
   );
 }

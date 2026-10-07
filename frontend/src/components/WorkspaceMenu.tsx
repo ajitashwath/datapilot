@@ -67,11 +67,12 @@ export default function WorkspaceMenu({ user, state, onSwitch, onNew, onChanged,
   const adminTeams = teams.filter((t) => t.role !== "viewer");
   return (
     <div ref={ref} className="relative">
-      <button onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="true" className="max-w-[12rem] truncate rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">
-        {state?.name ?? "Workspace"} <span aria-hidden="true">&#9662;</span>
+      <button onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="true" className="flex w-full items-center justify-between gap-2 rounded-lg bg-slate-100 px-3 py-2 text-left text-sm font-medium text-slate-800 hover:bg-slate-200">
+        <span className="truncate">{state?.name ?? "Workspace"}</span>
+        <span aria-hidden="true" className="text-slate-500">&#9662;</span>
       </button>
       {open && (
-        <div className="absolute left-0 z-20 mt-2 max-h-[80vh] w-80 space-y-4 overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
+        <div className="absolute left-0 z-50 mt-2 max-h-[80vh] w-80 space-y-4 overflow-y-auto rounded-xl border border-slate-200 bg-surface p-4 shadow-xl">
           <section aria-label="Your workspaces">
             <h2 className="mb-2 text-sm font-semibold text-slate-900">Workspaces</h2>
             <ul className="space-y-1">
@@ -114,14 +115,14 @@ export default function WorkspaceMenu({ user, state, onSwitch, onNew, onChanged,
                   </label>
                   <div className="mt-1 flex gap-2">
                     <input id="ws-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} className="min-w-0 flex-1 rounded-lg border border-slate-300 px-2 py-1 text-sm" />
-                    <button onClick={() => change({ name })} disabled={!name.trim() || name === state.name} className="rounded-lg bg-slate-800 px-3 py-1 text-sm text-white disabled:opacity-40">
+                    <button onClick={() => change({ name })} disabled={!name.trim() || name === state.name} className="rounded-lg bg-ink px-3 py-1 text-sm text-white disabled:opacity-40">
                       Save
                     </button>
                   </div>
                   <label htmlFor="ws-team" className="mt-3 block text-xs font-medium text-slate-600">
                     Shared with team
                   </label>
-                  <select id="ws-team" value={state.team_id ?? ""} onChange={(e) => change({ team_id: e.target.value || null })} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm">
+                  <select id="ws-team" value={state.team_id ?? ""} onChange={(e) => change({ team_id: e.target.value || null })} className="mt-1 w-full rounded-lg border border-slate-300 bg-surface px-2 py-1 text-sm">
                     <option value="">Only me</option>
                     {adminTeams.map((t) => (
                       <option key={t.id} value={t.id}>

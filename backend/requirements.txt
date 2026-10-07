@@ -12,3 +12,4 @@ openai>=1.50
 cryptography>=46
 httpx>=0.27
 psycopg[binary]>=3.2
+segno>=1.6

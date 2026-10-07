@@ -68,7 +68,7 @@ function TeamCard({ team, user, onChanged }: { team: Team; user: User; onChanged
             <option value="viewer">viewer (read only)</option>
             <option value="admin">admin</option>
           </select>
-          <button type="submit" disabled={!email.trim()} className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-40">
+          <button type="submit" disabled={!email.trim()} className="rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-white disabled:opacity-40">
             Add
           </button>
         </form>

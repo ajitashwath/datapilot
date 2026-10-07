@@ -84,7 +84,7 @@ export default function ConnectDialog({ sessionId, allowPrivate, onClose, onImpo
               setTab(t.id);
               setError(null);
             }}
-            className={`rounded-md px-3 py-1 text-sm font-medium ${tab === t.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-600"}`}
+            className={`rounded-md px-3 py-1 text-sm font-medium ${tab === t.id ? "bg-surface text-slate-900 shadow-sm" : "text-slate-600"}`}
           >
             {t.label}
           </button>
@@ -167,7 +167,8 @@ export default function ConnectDialog({ sessionId, allowPrivate, onClose, onImpo
                 SSL
               </label>
               <select id="pg-ssl" value={connection.sslmode} onChange={(e) => set("sslmode", e.target.value as PostgresConnection["sslmode"])} className={inputClass}>
-                <option value="require">require</option>
+                <option value="verify-full">verify-full (checks the certificate)</option>
+                <option value="require">require (encrypts, no certificate check)</option>
                 <option value="prefer">prefer</option>
                 <option value="disable">disable</option>
               </select>
@@ -189,7 +190,7 @@ export default function ConnectDialog({ sessionId, allowPrivate, onClose, onImpo
               <button
                 type="submit"
                 disabled={busy || !connection.host || !connection.dbname || !connection.user}
-                className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-40"
+                className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white hover:bg-ink/80 disabled:opacity-40"
               >
                 Connect and list tables
               </button>

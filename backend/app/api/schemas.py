@@ -77,3 +77,6 @@ class AppConfig(BaseModel):
     python_enabled: bool
     schedule_min_minutes: int
     allow_private_connections: bool
+    email_enabled: bool = False
+    email_verification_required: bool = False
+    two_factor_available: bool = False

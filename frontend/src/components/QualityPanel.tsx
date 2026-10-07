@@ -18,7 +18,7 @@ export function IssueList({ issues }: { issues: QualityIssue[] }) {
   return (
     <ul className="space-y-2">
       {issues.map((issue, i) => (
-        <li key={i} className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2">
+        <li key={i} className="flex items-start gap-3 rounded-lg border border-slate-200 bg-surface px-3 py-2">
           <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${severityStyle[issue.severity]}`}>{issue.severity}</span>
           <div className="min-w-0">
             <p className="text-sm text-slate-700">{issue.message}</p>
