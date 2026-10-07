@@ -6,7 +6,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from app.agent.llm import LLMError, LLMProvider, Message, TextDelta, ToolResultMessage
-from app.agent.prompts import build_system_prompt
+from app.agent.prompts import build_system_prompt, grounding_text
 from app.agent.tools import result_for_llm, run_tool, tool_specs
 from app.models import ToolResult
 from app.session import AnalysisRecord, Session
@@ -165,7 +165,7 @@ def run_turn(session: Session, question: str, llm: LLMProvider) -> Iterator[Even
         new_messages.append(Message(role="assistant", text=final_text))
 
     warnings = []
-    ungrounded = find_ungrounded_numbers(final_text, tool_texts, question)
+    ungrounded = find_ungrounded_numbers(final_text, tool_texts + [grounding_text(session)], question)
     if ungrounded:
         warnings.append(f"These figures were not found in any tool result, please verify them: {', '.join(ungrounded)}.")
     session.history = trim_history(session.history + compact_for_history(new_messages), settings.history_turns)

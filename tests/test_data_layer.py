@@ -266,10 +266,37 @@ class TestPythonSandbox:
         "result = getattr(orders, 'shape')",
         "result = orders.query('revenue > 1')",
         "result = np.load('x.npy')",
+        "result = pd.compat.os.getcwd()",
+        "result = pd.core.frame.os.listdir('.')",
+        "result = '{0.__class__}'.format(1)",
+        "result = statistics.sys.version",
     ])
     def test_dangerous_code_is_rejected(self, store, code):
         with pytest.raises(UserError):
             self.run(store, code)
+
+    @pytest.mark.parametrize("code", [
+        "result = str(pd.util)",
+        "result = str(pd.arrays)",
+        "result = str(np.ma)",
+        "result = str(pd.tseries)",
+    ])
+    def test_runtime_guard_refuses_to_return_modules(self, store, code):
+        out = self.run(store, code)
+        assert not out["ok"] and "not allowed" in out["error"]
+
+    def test_legitimate_analysis_still_works_under_the_guard(self, store):
+        code = (
+            "orders['d'] = pd.to_datetime(orders['order_date'])\n"
+            "orders['band'] = pd.cut(orders['revenue'], [-1e9, 100, 1000, 1e9], labels=['low', 'mid', 'high'])\n"
+            "grouped = orders.groupby(['band', orders['d'].dt.year], observed=True)['revenue'].agg(['count', 'mean'])\n"
+            "rng = np.random.default_rng(0)\n"
+            "slope = np.linalg.lstsq(np.c_[orders['quantity'], np.ones(len(orders))], orders['revenue'], rcond=None)[0][0]\n"
+            "label = f\"{len(grouped)} groups, slope {slope:.1f}, noise {rng.random() < 2}\"\n"
+            "result = grouped.reset_index().assign(note=label)"
+        )
+        out = self.run(store, code)
+        assert out["ok"] and out["result"]["row_count"] >= 6 and "groups, slope" in out["result"]["rows"][0][-1]
 
     def test_infinite_loop_times_out(self, store):
         with pytest.raises(UserError) as exc:

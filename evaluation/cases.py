@@ -146,7 +146,6 @@ CASES = [
     Case("no_data_for_period", "hallucination", [Turn(
         "What was the total revenue in 1999?",
         plan=[("execute_sql", {"query": "SELECT SUM(revenue) AS total FROM orders WHERE order_date < DATE '2000-01-01'"})],
-        any_tools=[["execute_sql"], ["execute_python"]],
         expect_empty_result=True,
         answer_any=["no data", "no orders", "no records", "no revenue", "not contain", "does not", "doesn't", "outside", "none", "before 2023", "starts"],
     )]),

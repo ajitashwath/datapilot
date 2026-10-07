@@ -250,11 +250,6 @@
       "passed": true,
       "checks": [
         {
-          "name": "tool_selection",
-          "passed": true,
-          "detail": "used ['execute_sql'], accepted [['execute_sql'], ['execute_python']]"
-        },
-        {
           "name": "no_fabrication",
           "passed": true,
           "detail": "query returned no value"

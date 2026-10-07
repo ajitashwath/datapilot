@@ -199,6 +199,10 @@ class TestHallucinationResistance:
         done = of_type(collect(session, "revenue?", llm), DoneEvent)[0]
         assert done.warnings and "9,876,543" in done.warnings[0]
 
+    def test_numbers_from_the_schema_context_are_not_flagged(self, session):
+        done = of_type(collect(session, "how many orders?", ScriptedLLM(say("The data holds 7,044 orders and ends on 2024-12-31."))), DoneEvent)[0]
+        assert done.warnings == []
+
     def test_numbers_without_any_tool_call_are_flagged(self, session):
         done = of_type(collect(session, "revenue?", ScriptedLLM(say("Revenue was 1,234,567."))), DoneEvent)[0]
         assert done.warnings

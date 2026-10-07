@@ -56,10 +56,6 @@ export default function Home() {
   const [notice, setNotice] = useState<{ kind: "error" | "info"; text: string } | null>(null);
   const [resetSignal, setResetSignal] = useState(0);
 
-  const fail = useCallback((error: unknown) => {
-    setNotice({ kind: "error", text: error instanceof ApiError ? error.message : "Something went wrong. Please try again." });
-  }, []);
-
   const startSession = useCallback(async () => {
     const created = await createSession();
     storeSession(created.session_id);
@@ -68,6 +64,18 @@ export default function Home() {
     setSelected(null);
     setResetSignal((n) => n + 1);
   }, []);
+
+  const fail = useCallback(
+    (error: unknown) => {
+      if (error instanceof ApiError && error.code === "session_not_found") {
+        setNotice({ kind: "info", text: "Your session expired, so a new one was started. Please upload your files again." });
+        startSession().catch(() => setNotice({ kind: "error", text: "Could not start a new session." }));
+        return;
+      }
+      setNotice({ kind: "error", text: error instanceof ApiError ? error.message : "Something went wrong. Please try again." });
+    },
+    [startSession],
+  );
 
   useEffect(() => {
     getConfig().then(setConfig).catch(fail);
