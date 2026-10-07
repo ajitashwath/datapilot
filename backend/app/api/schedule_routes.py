@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 
@@ -13,6 +15,8 @@ class ScheduleCreate(BaseModel):
     sql: str = Field(min_length=1, max_length=8000)
     every_minutes: int = Field(ge=1)
     refresh_sources: bool = False
+    notify: Literal['none', 'failure', 'always'] = 'none'
+    webhook_url: str | None = Field(None, max_length=500)
 
 
 class ScheduleToggle(BaseModel):
@@ -24,7 +28,8 @@ def create_schedule(request: Request, session_id: str, body: ScheduleCreate) -> 
     session = session_of(request, session_id)
     user = current_user(request)
     return request.app.state.schedules.create(
-        session, body.name, body.sql, body.every_minutes, body.refresh_sources, user.id if user else None
+        session, body.name, body.sql, body.every_minutes, body.refresh_sources, user.id if user else None, body.notify,
+        body.webhook_url,
     )
 
 

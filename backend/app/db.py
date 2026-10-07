@@ -8,7 +8,21 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     password_hash TEXT NOT NULL,
+    verified INTEGER NOT NULL DEFAULT 1,
+    totp_secret TEXT,
+    totp_enabled INTEGER NOT NULL DEFAULT 0,
+    totp_last_step INTEGER NOT NULL DEFAULT 0,
     created_at REAL NOT NULL
+);
+CREATE TABLE IF NOT EXISTS recovery_codes (
+    code_hash TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS email_tokens (
+    token_hash TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    purpose TEXT NOT NULL,
+    expires_at REAL NOT NULL
 );
 CREATE TABLE IF NOT EXISTS auth_tokens (
     token_hash TEXT PRIMARY KEY,
@@ -51,6 +65,9 @@ CREATE TABLE IF NOT EXISTS schedules (
     sql TEXT NOT NULL,
     every_minutes INTEGER NOT NULL,
     refresh_sources INTEGER NOT NULL DEFAULT 0,
+    notify TEXT NOT NULL DEFAULT 'none',
+    webhook_url TEXT,
+    webhook_secret TEXT,
     enabled INTEGER NOT NULL DEFAULT 1,
     next_run_at REAL NOT NULL,
     created_by TEXT,
@@ -81,6 +98,23 @@ class Database:
         self.lock = threading.Lock()
         self.con.execute("PRAGMA journal_mode=WAL")
         self.con.executescript(SCHEMA)
+        self.add_missing_columns()
+
+    def add_missing_columns(self) -> None:
+        wanted = {
+            "users": [
+                ("verified", "INTEGER NOT NULL DEFAULT 1"),
+                ("totp_secret", "TEXT"),
+                ("totp_enabled", "INTEGER NOT NULL DEFAULT 0"),
+                ("totp_last_step", "INTEGER NOT NULL DEFAULT 0"),
+            ],
+            "schedules": [("notify", "TEXT NOT NULL DEFAULT 'none'"), ("webhook_url", "TEXT"), ("webhook_secret", "TEXT")],
+        }
+        for table, columns in wanted.items():
+            existing = {row[1] for row in self.con.execute(f"PRAGMA table_info({table})")}
+            for name, definition in columns:
+                if name not in existing:
+                    self.con.execute(f"ALTER TABLE {table} ADD COLUMN {name} {definition}")
 
     def run(self, sql: str, params: tuple = ()) -> int:
         with self.lock:

@@ -147,6 +147,9 @@ export interface AppConfig {
   python_enabled: boolean;
   schedule_min_minutes: number;
   allow_private_connections: boolean;
+  email_enabled: boolean;
+  email_verification_required: boolean;
+  two_factor_available: boolean;
 }
 
 export interface UploadResponse {
@@ -188,8 +191,23 @@ export interface User {
 }
 
 export interface AuthResponse {
-  token: string;
+  token: string | null;
   user: User;
+  verification_required: boolean;
+  two_factor_required: boolean;
+  challenge: string | null;
+}
+
+export interface TwoFactorStatus {
+  available: boolean;
+  enabled: boolean;
+  recovery_remaining: number;
+}
+
+export interface TwoFactorSetup {
+  secret: string;
+  uri: string;
+  qr_svg: string;
 }
 
 export interface Team {
@@ -245,6 +263,9 @@ export interface Schedule {
   sql: string;
   every_minutes: number;
   refresh_sources: boolean;
+  notify: "none" | "failure" | "always";
+  webhook_host: string | null;
+  webhook_secret?: string;
   enabled: boolean;
   next_run_at: number;
   last_run: { id: string; ran_at: number; ok: boolean; error: string | null; row_count: number; note: string | null } | null;
@@ -264,5 +285,5 @@ export interface PostgresConnection {
   dbname: string;
   user: string;
   password: string;
-  sslmode: "require" | "prefer" | "disable";
+  sslmode: "verify-full" | "require" | "prefer" | "disable";
 }

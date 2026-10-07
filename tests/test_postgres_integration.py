@@ -9,6 +9,7 @@ from app.connectors import PostgresConnection, import_postgres, list_postgres_ta
 from app.data.datasets import DatasetStore
 from app.errors import UserError
 from app.session import Session
+from tls_proxy import TlsPostgresProxy
 
 ADMIN = {
     "host": os.environ.get("TEST_PG_HOST"),
@@ -168,6 +169,47 @@ def test_require_ssl_fails_cleanly_against_a_server_without_tls(database, settin
     with pytest.raises(UserError) as exc:
         list_postgres_tables(connection(database, sslmode="require"), settings)
     assert exc.value.code == "connection_failed"
+
+
+@pytest.fixture
+def tls_proxy(tmp_path):
+    proxy = TlsPostgresProxy(ADMIN["host"], ADMIN["port"], tmp_path).start()
+    yield proxy
+    proxy.stop()
+
+
+def test_require_negotiates_real_tls_and_imports_through_it(database, settings, session, tls_proxy):
+    conn = connection(database, port=tls_proxy.port, sslmode="require")
+    live = open_postgres(conn, settings)
+    try:
+        assert live.pgconn.ssl_in_use is True
+    finally:
+        live.close()
+    names = import_postgres(session, settings, conn, ["public.customers"])
+    assert session.store.get_profile(names[0]).rows == 4
+    assert tls_proxy.tls_sessions >= 2 and tls_proxy.plain_sessions == 0
+
+
+def test_prefer_upgrades_to_tls_when_offered_and_disable_never_does(database, settings, tls_proxy):
+    preferred = open_postgres(connection(database, port=tls_proxy.port, sslmode="prefer"), settings)
+    disabled = open_postgres(connection(database, port=tls_proxy.port, sslmode="disable"), settings)
+    try:
+        assert preferred.pgconn.ssl_in_use is True and disabled.pgconn.ssl_in_use is False
+    finally:
+        preferred.close()
+        disabled.close()
+    assert tls_proxy.tls_sessions == 1 and tls_proxy.plain_sessions == 1
+
+
+def test_verify_full_refuses_a_certificate_that_is_not_trusted(database, settings, tls_proxy):
+    with pytest.raises(UserError) as exc:
+        list_postgres_tables(connection(database, port=tls_proxy.port, sslmode="verify-full"), settings)
+    assert exc.value.code == "connection_failed" and "certificate" not in exc.value.message.lower()
+    assert tls_proxy.plain_sessions == 0
+
+
+def test_require_alone_accepts_any_certificate_which_is_why_verify_full_exists(database, settings, tls_proxy):
+    assert "public.customers" in list_postgres_tables(connection(database, port=tls_proxy.port, sslmode="require"), settings)
 
 
 def test_private_hosts_are_refused_unless_allowed(database, settings):

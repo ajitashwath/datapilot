@@ -16,12 +16,15 @@ const INTERVALS = [
 const inputClass = "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500";
 
 export function ScheduleDialog({
-  sessionId, initialSql, minMinutes, hasLinkedData, onClose, onCreated,
-}: { sessionId: string; initialSql: string; minMinutes: number; hasLinkedData: boolean; onClose: () => void; onCreated: () => void }) {
+  sessionId, initialSql, minMinutes, hasLinkedData, emailEnabled, onClose, onCreated,
+}: { sessionId: string; initialSql: string; minMinutes: number; hasLinkedData: boolean; emailEnabled: boolean; onClose: () => void; onCreated: () => void }) {
   const [name, setName] = useState("");
   const [sql, setSql] = useState(initialSql);
   const [minutes, setMinutes] = useState(1440);
   const [refresh, setRefresh] = useState(false);
+  const [notify, setNotify] = useState<"none" | "failure" | "always">("none");
+  const [webhook, setWebhook] = useState("");
+  const [secret, setSecret] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const options = INTERVALS.filter((i) => i.minutes >= minMinutes);
@@ -31,9 +34,12 @@ export function ScheduleDialog({
     setBusy(true);
     setError(null);
     try {
-      await createSchedule(sessionId, { name, sql, every_minutes: minutes, refresh_sources: refresh });
+      const created = await createSchedule(sessionId, {
+        name, sql, every_minutes: minutes, refresh_sources: refresh, notify, webhook_url: webhook.trim() || undefined,
+      });
       onCreated();
-      onClose();
+      if (created.webhook_secret) setSecret(created.webhook_secret);
+      else onClose();
     } catch (failure) {
       setError(failure instanceof ApiError ? failure.message : "Could not create the schedule.");
     } finally {
@@ -43,6 +49,20 @@ export function ScheduleDialog({
 
   return (
     <Modal title="Schedule this query" onClose={onClose} wide>
+      {secret ? (
+        <div>
+          <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+            Schedule created.
+          </p>
+          <p className="mt-3 text-sm text-slate-700">
+            Each notification is a JSON POST with an <code>X-DataPilot-Signature</code> header, the HMAC SHA-256 of the body using this secret. Save it now, it is not shown again.
+          </p>
+          <p className="mt-2 break-all rounded-lg bg-slate-50 p-3 font-mono text-sm text-slate-900">{secret}</p>
+          <button onClick={onClose} className="mt-4 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
+            Done
+          </button>
+        </div>
+      ) : (
       <form onSubmit={submit}>
         <label htmlFor="schedule-name" className="text-sm font-medium text-slate-700">
           Name
@@ -68,7 +88,22 @@ export function ScheduleDialog({
             Re-download linked datasets before each run
           </label>
         )}
-        <p className="mt-2 text-xs text-slate-500">Results are stored (last 20 runs) and shown here. No emails are sent.</p>
+        <label htmlFor="schedule-notify" className="mt-3 block text-sm font-medium text-slate-700">
+          Notify me
+        </label>
+        <select id="schedule-notify" value={notify} onChange={(e) => setNotify(e.target.value as typeof notify)} className={inputClass}>
+          <option value="none">Never</option>
+          <option value="failure">Only when a run fails</option>
+          <option value="always">After every run</option>
+        </select>
+        <label htmlFor="schedule-webhook" className="mt-3 block text-sm font-medium text-slate-700">
+          Webhook address (optional)
+        </label>
+        <input id="schedule-webhook" type="url" placeholder="https://" value={webhook} onChange={(e) => setWebhook(e.target.value)} className={inputClass} />
+        <p className="mt-2 text-xs text-slate-500">
+          Results are stored (last 20 runs) and shown here. Notifications carry a summary only, never your data.{" "}
+          {emailEnabled ? "They are sent by email and to the webhook if you set one." : "Email is not set up on this server, so only the webhook is used."}
+        </p>
         {error && (
           <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
             {error}
@@ -78,6 +113,7 @@ export function ScheduleDialog({
           Create schedule
         </button>
       </form>
+      )}
     </Modal>
   );
 }
@@ -89,7 +125,7 @@ function RunView({ run }: { run: ScheduleRun }) {
         {new Date(run.ran_at * 1000).toLocaleString()} {run.note ? `, ${run.note}` : ""}
       </p>
       {run.ok ? (
-        <ResultTable table={{ columns: run.columns, rows: run.rows, row_count: run.row_count, truncated: false }} pageSize={5} />
+        <ResultTable table={{ columns: run.columns, rows: run.rows, row_count: run.row_count, truncated: run.row_count > run.rows.length }} pageSize={5} />
       ) : (
         <p role="alert" className="mt-1 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
           {run.error}
@@ -100,8 +136,8 @@ function RunView({ run }: { run: ScheduleRun }) {
 }
 
 export default function SchedulesPanel({
-  sessionId, canEdit, minMinutes, hasLinkedData, firstSql,
-}: { sessionId: string; canEdit: boolean; minMinutes: number; hasLinkedData: boolean; firstSql: string }) {
+  sessionId, canEdit, minMinutes, hasLinkedData, emailEnabled, firstSql,
+}: { sessionId: string; canEdit: boolean; minMinutes: number; hasLinkedData: boolean; emailEnabled: boolean; firstSql: string }) {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [open, setOpen] = useState<string | null>(null);
   const [runs, setRuns] = useState<ScheduleRun[]>([]);
@@ -156,7 +192,7 @@ export default function SchedulesPanel({
                   <p className="font-medium text-slate-900">{s.name}</p>
                   <p className="text-xs text-slate-500">
                     Every {s.every_minutes >= 1440 ? `${Math.round(s.every_minutes / 1440)} day(s)` : `${Math.round(s.every_minutes / 60)} hour(s)`}
-                    {s.refresh_sources ? ", refreshes linked data" : ""}, {s.enabled ? `next ${new Date(s.next_run_at * 1000).toLocaleString()}` : "paused"}
+                    {s.refresh_sources ? ", refreshes linked data" : ""}{s.notify !== "none" ? `, notifies ${s.notify === "failure" ? "on failure" : "after every run"}${s.webhook_host ? ` (webhook ${s.webhook_host})` : ""}` : ""}, {s.enabled ? `next ${new Date(s.next_run_at * 1000).toLocaleString()}` : "paused"}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 text-xs font-medium">
@@ -189,7 +225,7 @@ export default function SchedulesPanel({
           ))}
         </ul>
       )}
-      {creating && <ScheduleDialog sessionId={sessionId} initialSql={firstSql} minMinutes={minMinutes} hasLinkedData={hasLinkedData} onClose={() => setCreating(false)} onCreated={load} />}
+      {creating && <ScheduleDialog sessionId={sessionId} initialSql={firstSql} minMinutes={minMinutes} hasLinkedData={hasLinkedData} emailEnabled={emailEnabled} onClose={() => setCreating(false)} onCreated={load} />}
     </div>
   );
 }

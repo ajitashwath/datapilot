@@ -37,7 +37,8 @@ A strict self-review of DataPilot. Status values: **Done** (implemented and exer
 | Accounts and teams | `AUTH_MODE=accounts`: scrypt passwords, hashed tokens, throttled sign-in, private workspaces (404 not 403), teams with admin, member and viewer roles, read-only enforcement | Done (no email verification, SSO or password reset) | `accounts.py`, `api/deps.py`, `test_accounts.py`, two-user browser run |
 | Shareable analyses | Immutable public snapshot links with revoke, noindex, rate limit, public read-only page | Done (snapshots, not live dashboards) | `sharing.py`, `app/share/[token]`, `test_sharing_schedules.py`, signed-out browser run |
 | Scheduling | Saved SQL on an interval, run now, pause, history, optional refresh of linked data, scheduler thread, expiry exemption | Done (SQL only, no notifications) | `schedules.py`, `test_sharing_schedules.py`, browser run |
-| Connectors | CSV link and Google Sheets with refresh, SQLite file, Postgres, SSRF protection with DNS pinning and redirect checks | Done (Postgres integration-tested on a real server, TLS success path untested) | `connectors.py`, `test_connectors.py`, `test_postgres_integration.py`, browser run |
+| Connectors | CSV link and Google Sheets with refresh, SQLite file, Postgres, SSRF protection with DNS pinning and redirect checks | Done (Postgres integration-tested on a real server, TLS through a proxy) | `connectors.py`, `test_connectors.py`, `test_postgres_integration.py`, browser run |
+| Account recovery and email | Optional SMTP: email confirmation, forgot and reset links, change password with session revocation, security notice emails, schedule notifications (summary only) | Done (tested against a local SMTP server and in the browser, not a real mail provider) | `mailer.py`, `accounts.py`, `test_email_flows.py`, browser run |
 | Job queue | In-process job runner with status polling, used for imports and refreshes | Done (single node) | `jobs.py`, `connector_routes.py` |
 | Responsive and accessible UI | Phone layout with drawer, keyboard focus, labels, live regions; axe-core (WCAG 2.1 A and AA) reports no violations on chat, all explorer tabs and settings at phone and desktop widths | Done | browser audits |
 | Metrics and alerting | `/api/metrics` counters, example alert rules | Done (no alert manager bundled) | `metrics.py`, `docs/DEPLOY.md` |
@@ -58,6 +59,7 @@ A strict self-review of DataPilot. Status values: **Done** (implemented and exer
 - Join detection crashed with a server error when two datasets were named like internal SQL aliases (for example `a.csv` and `b.csv`). Fixed with derived tables and a regression test.
 - Percent-encoded file names in links (`Sales%20Q3.csv`) produced table names like `sales_20q3`. Fixed.
 - The Postgres table listing query used `NOT IN %s` with a tuple, which is invalid in psycopg 3. The fake driver could not catch this; a real server did. Fixed.
+- Scheduled runs reported the stored-row cap (50) as the row count. They now report the real total.
 - A `<button>` nested inside a `<summary>` failed the axe nested-interactive rule. Moved out of the summary.
 - The remembered workspace was shared between users of one browser. It is now stored per user.
 - The lock file omitted `psycopg-binary`, which would have broken Postgres in the slim Docker image. The lock generator now honours extras.
@@ -66,7 +68,7 @@ A strict self-review of DataPilot. Status values: **Done** (implemented and exer
 
 - Build and run the Docker images, and run the CI workflow on GitHub.
 - Re-run the whole live evaluation on one model with a paid key, so every case runs on the final prompt, and re-check `underperforming_products`.
-- Run OpenAI and Anthropic live, and test the Postgres connector over TLS.
+- Run OpenAI and Anthropic live, and test Postgres TLS against a server with a private CA.
 - Move `execute_python` into a network-less sandbox container if it must stay enabled for untrusted users.
-- Email verification, password reset and SSO if accounts are exposed beyond a trusted group; notifications for scheduled queries.
+- SSO if accounts are exposed beyond a trusted group; a real mail provider run for the email features.
 - A shared database and external job workers if this ever needs more than one node.

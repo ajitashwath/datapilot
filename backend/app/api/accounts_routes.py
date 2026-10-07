@@ -23,8 +23,11 @@ class LoginRequest(BaseModel):
 
 
 class AuthResponse(BaseModel):
-    token: str
+    token: str | None
     user: User
+    verification_required: bool = False
+    two_factor_required: bool = False
+    challenge: str | None = None
 
 
 class TeamCreate(BaseModel):
@@ -73,7 +76,9 @@ def throttle_login(request: Request, email: str) -> None:
 def register(request: Request, body: RegisterRequest) -> AuthResponse:
     throttle_login(request, body.email)
     accounts = accounts_of(request)
-    accounts.register(body.email, body.password, body.name)
+    user = accounts.register(body.email, body.password, body.name)
+    if accounts.needs_verification():
+        return AuthResponse(token=None, user=user, verification_required=True)
     token, user = accounts.login(body.email, body.password)
     return AuthResponse(token=token, user=user)
 
@@ -81,8 +86,128 @@ def register(request: Request, body: RegisterRequest) -> AuthResponse:
 @public.post("/login", dependencies=[Depends(accounts_enabled)])
 def login(request: Request, body: LoginRequest) -> AuthResponse:
     throttle_login(request, body.email)
-    token, user = accounts_of(request).login(body.email, body.password)
+    token, user, challenge = accounts_of(request).begin_login(body.email, body.password)
+    return AuthResponse(token=token, user=user, two_factor_required=challenge is not None, challenge=challenge)
+
+
+class TwoFactorLogin(BaseModel):
+    challenge: str = Field(min_length=10, max_length=200)
+    code: str = Field(min_length=6, max_length=20)
+
+
+class PasswordOnly(BaseModel):
+    password: str = Field(max_length=200)
+
+
+class CodeOnly(BaseModel):
+    code: str = Field(min_length=6, max_length=20)
+
+
+class TwoFactorDisable(BaseModel):
+    password: str = Field(max_length=200)
+    code: str = Field(min_length=6, max_length=20)
+
+
+@public.post("/login/2fa", dependencies=[Depends(accounts_enabled)])
+def login_with_code(request: Request, body: TwoFactorLogin) -> AuthResponse:
+    accounts = accounts_of(request)
+    limiter = request.app.state.limiter
+    limiter.check("twofa_ip", client_ip(request), settings_of(request).login_per_minute, 60)
+    owner = accounts.challenge_user_id(body.challenge)
+    limiter.check("twofa_user", owner or "unknown", 10, 900)
+    token, user = accounts.finish_login(body.challenge, body.code)
     return AuthResponse(token=token, user=user)
+
+
+class TokenBody(BaseModel):
+    token: str = Field(min_length=10, max_length=200)
+
+
+class EmailBody(BaseModel):
+    email: str = Field(max_length=254)
+
+
+class ResetBody(BaseModel):
+    token: str = Field(min_length=10, max_length=200)
+    password: str = Field(max_length=200)
+
+
+class PasswordChange(BaseModel):
+    current_password: str = Field(max_length=200)
+    new_password: str = Field(max_length=200)
+
+
+def email_ready(request: Request) -> None:
+    if not accounts_of(request).mailer.enabled:
+        raise UserError("Email is not set up on this server, so this is unavailable. Ask an administrator.", "email_disabled", 501)
+
+
+def throttle_email(request: Request, scope: str, email: str) -> None:
+    limit = settings_of(request).forgot_per_hour
+    limiter = request.app.state.limiter
+    limiter.check(scope + "_ip", client_ip(request), limit * 3, 3600)
+    limiter.check(scope + "_email", email.strip().lower(), limit, 3600)
+
+
+@public.post("/forgot", dependencies=[Depends(accounts_enabled), Depends(email_ready)])
+def forgot_password(request: Request, body: EmailBody) -> dict:
+    throttle_email(request, "forgot", body.email)
+    accounts_of(request).forgot_password(body.email)
+    return {"sent": True}
+
+
+@public.post("/reset", dependencies=[Depends(accounts_enabled)])
+def reset_password(request: Request, body: ResetBody) -> dict:
+    throttle_login(request, "reset-attempt")
+    accounts_of(request).reset_password(body.token, body.password)
+    return {"reset": True}
+
+
+@public.post("/verify", dependencies=[Depends(accounts_enabled)])
+def verify_email(request: Request, body: TokenBody) -> dict:
+    throttle_login(request, "verify-attempt")
+    accounts_of(request).verify_email(body.token)
+    return {"verified": True}
+
+
+@public.post("/resend-verification", dependencies=[Depends(accounts_enabled), Depends(email_ready)])
+def resend_verification(request: Request, body: EmailBody) -> dict:
+    throttle_email(request, "resend", body.email)
+    accounts_of(request).resend_verification(body.email)
+    return {"sent": True}
+
+
+@router.post("/auth/password", dependencies=[Depends(accounts_enabled)])
+def change_password(request: Request, body: PasswordChange) -> dict:
+    accounts_of(request).change_password(signed_in(request), body.current_password, body.new_password, bearer_token(request))
+    return {"changed": True}
+
+
+@router.get("/auth/2fa", dependencies=[Depends(accounts_enabled)])
+def two_factor_status(request: Request) -> dict:
+    return accounts_of(request).two_factor_status(signed_in(request))
+
+
+@router.post("/auth/2fa/setup", dependencies=[Depends(accounts_enabled)])
+def two_factor_setup(request: Request, body: PasswordOnly) -> dict:
+    user = signed_in(request)
+    request.app.state.limiter.check("twofa_setup", user.id, 10, 900)
+    return accounts_of(request).start_two_factor(user, body.password)
+
+
+@router.post("/auth/2fa/enable", dependencies=[Depends(accounts_enabled)])
+def two_factor_enable(request: Request, body: CodeOnly) -> dict:
+    user = signed_in(request)
+    request.app.state.limiter.check("twofa_enable", user.id, 10, 900)
+    return {"recovery_codes": accounts_of(request).enable_two_factor(user, body.code, bearer_token(request))}
+
+
+@router.post("/auth/2fa/disable", dependencies=[Depends(accounts_enabled)])
+def two_factor_disable(request: Request, body: TwoFactorDisable) -> dict:
+    user = signed_in(request)
+    request.app.state.limiter.check("twofa_disable", user.id, 10, 900)
+    accounts_of(request).disable_two_factor(user, body.password, body.code)
+    return {"disabled": True}
 
 
 @router.post("/auth/logout", dependencies=[Depends(accounts_enabled)])

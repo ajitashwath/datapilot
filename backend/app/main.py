@@ -19,6 +19,7 @@ from app.jobs import JobRunner
 from app.schedules import Scheduler, Schedules
 from app.sharing import Sharing
 from app.limits import RateLimiter
+from app.mailer import Mailer
 from app.logging_setup import log_event, request_id_var, session_id_var, setup_logging
 from app.metrics import metrics
 from app.session import SessionManager
@@ -35,9 +36,10 @@ def create_app(
     setup_logging(settings.log_level)
     root = settings.sessions_root()
     db = Database(root / "app.db")
-    accounts = Accounts(db, settings)
+    mailer = Mailer(settings)
+    accounts = Accounts(db, settings, mailer)
     manager = SessionManager(settings, accounts)
-    schedules = Schedules(db, settings)
+    schedules = Schedules(db, settings, mailer)
     scheduler = Scheduler(schedules, manager, settings)
 
     @asynccontextmanager
@@ -47,11 +49,13 @@ def create_app(
         yield
         scheduler.stop()
         app.state.jobs.shutdown()
+        mailer.shutdown()
 
     app = FastAPI(title="DataPilot API", version="1.2.0", lifespan=lifespan)
     app.state.settings = settings
     app.state.db = db
     app.state.accounts = accounts
+    app.state.mailer = mailer
     app.state.sessions = manager
     app.state.schedules = schedules
     app.state.scheduler = scheduler

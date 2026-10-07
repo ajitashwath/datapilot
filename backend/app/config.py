@@ -54,6 +54,21 @@ class Settings(BaseSettings):
     connector_timeout_seconds: float = 30.0
     scheduler_enabled: bool = True
 
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    smtp_security: str = "starttls"
+    public_url: str = "http://localhost:3000"
+    require_email_verification: bool = False
+    reset_token_minutes: int = 60
+    verify_token_hours: int = 24
+    forgot_per_hour: int = 5
+
+    def email_enabled(self) -> bool:
+        return bool(self.smtp_host and self.smtp_from)
+
     def sessions_root(self) -> Path:
         return Path(self.upload_root) if self.upload_root else ROOT_DIR / "var" / "sessions"
 

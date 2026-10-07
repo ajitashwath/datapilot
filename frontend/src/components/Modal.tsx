@@ -15,7 +15,9 @@ export default function Modal({ title, onClose, children, wide = false }: { titl
     <dialog
       ref={ref}
       aria-label={title}
-      onClose={onClose}
+      onClose={() => {
+        if (!ref.current?.open) onClose();
+      }}
       onClick={(event) => {
         if (event.target === ref.current) onClose();
       }}

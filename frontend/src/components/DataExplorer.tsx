@@ -200,8 +200,8 @@ function SchemaPanel({ profile }: { profile: DatasetProfile }) {
 }
 
 export default function DataExplorer({
-  sessionId, profile, canEdit, minMinutes, hasLinkedData,
-}: { sessionId: string; profile: DatasetProfile | null; canEdit: boolean; minMinutes: number; hasLinkedData: boolean }) {
+  sessionId, profile, canEdit, minMinutes, hasLinkedData, emailEnabled,
+}: { sessionId: string; profile: DatasetProfile | null; canEdit: boolean; minMinutes: number; hasLinkedData: boolean; emailEnabled: boolean }) {
   const [tab, setTab] = useState<Tab>("Overview");
   if (!profile) {
     return (
@@ -237,7 +237,7 @@ export default function DataExplorer({
         {tab === "Schema" && <SchemaPanel profile={profile} />}
         {tab === "Quality" && <QualityPanel sessionId={sessionId} dataset={profile.name} />}
         {tab === "Schedules" && (
-          <SchedulesPanel sessionId={sessionId} canEdit={canEdit} minMinutes={minMinutes} hasLinkedData={hasLinkedData} firstSql={`SELECT * FROM "${profile.name}" LIMIT 100`} />
+          <SchedulesPanel sessionId={sessionId} canEdit={canEdit} minMinutes={minMinutes} hasLinkedData={hasLinkedData} emailEnabled={emailEnabled} firstSql={`SELECT * FROM "${profile.name}" LIMIT 100`} />
         )}
       </div>
     </div>

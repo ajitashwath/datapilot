@@ -167,7 +167,8 @@ export default function ConnectDialog({ sessionId, allowPrivate, onClose, onImpo
                 SSL
               </label>
               <select id="pg-ssl" value={connection.sslmode} onChange={(e) => set("sslmode", e.target.value as PostgresConnection["sslmode"])} className={inputClass}>
-                <option value="require">require</option>
+                <option value="verify-full">verify-full (checks the certificate)</option>
+                <option value="require">require (encrypts, no certificate check)</option>
                 <option value="prefer">prefer</option>
                 <option value="disable">disable</option>
               </select>

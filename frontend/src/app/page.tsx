@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AuthGate from "@/components/AuthGate";
+import ChangePasswordDialog from "@/components/ChangePasswordDialog";
+import TwoFactorDialog from "@/components/TwoFactorDialog";
 import Chat from "@/components/Chat";
 import ConnectDialog from "@/components/ConnectDialog";
 import DataExplorer from "@/components/DataExplorer";
@@ -74,6 +76,8 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [scheduleSql, setScheduleSql] = useState<string | null>(null);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [managingTwoFactor, setManagingTwoFactor] = useState(false);
 
   const accounts = config?.auth_mode === "accounts";
   const readOnly = state?.role === "reader";
@@ -356,9 +360,19 @@ export default function Home() {
             onNewSession={handleNewSession}
           />
           {accounts && user && (
-            <button onClick={handleSignOut} className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50" aria-label={`Sign out ${user.name}`}>
-              Sign out
-            </button>
+            <>
+              <button onClick={() => setChangingPassword(true)} className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50" aria-label={`Change password for ${user.name}`}>
+                Password
+              </button>
+              {config?.two_factor_available && (
+                <button onClick={() => setManagingTwoFactor(true)} className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50" aria-label="Two-factor sign-in settings">
+                  2FA
+                </button>
+              )}
+              <button onClick={handleSignOut} className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50" aria-label={`Sign out ${user.name}`}>
+                Sign out
+              </button>
+            </>
           )}
         </div>
       </header>
@@ -430,11 +444,14 @@ export default function Home() {
               canEdit={!readOnly}
               minMinutes={config?.schedule_min_minutes ?? 15}
               hasLinkedData={hasLinkedData}
+              emailEnabled={Boolean(config?.email_enabled)}
             />
           )}
         </main>
       </div>
 
+      {changingPassword && <ChangePasswordDialog onClose={() => setChangingPassword(false)} />}
+      {managingTwoFactor && <TwoFactorDialog onClose={() => setManagingTwoFactor(false)} />}
       {connecting && sessionId && (
         <ConnectDialog sessionId={sessionId} allowPrivate={Boolean(config?.allow_private_connections)} onClose={() => setConnecting(false)} onImported={handleImported} />
       )}
@@ -444,6 +461,7 @@ export default function Home() {
           initialSql={scheduleSql}
           minMinutes={config?.schedule_min_minutes ?? 15}
           hasLinkedData={hasLinkedData}
+          emailEnabled={Boolean(config?.email_enabled)}
           onClose={() => setScheduleSql(null)}
           onCreated={() => setNotice({ kind: "info", text: "Schedule created. Results appear under Data explorer, Schedules." })}
         />
