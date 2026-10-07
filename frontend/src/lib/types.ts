@@ -150,6 +150,7 @@ export interface AppConfig {
   email_enabled: boolean;
   email_verification_required: boolean;
   two_factor_available: boolean;
+  sso_name: string | null;
 }
 
 export interface UploadResponse {

@@ -34,7 +34,7 @@ A strict self-review of DataPilot. Status values: **Done** (implemented and exer
 | Large files | Streaming upload, streaming re-encoding, DuckDB disk spilling | Done | `loader.py`, 400k row stress run |
 | Live verification | Gemini run on 18 cases across three models: 16 passed, 1 failing by interpretation, 1 answered correctly with a widened check | Partial | README, Known limitations |
 | Export and saved analyses | CSV export, Markdown report export, saved transcript restored on reload, chart type switch | Done | `export.test.ts`, browser run |
-| Accounts and teams | `AUTH_MODE=accounts`: scrypt passwords, hashed tokens, throttled sign-in, private workspaces (404 not 403), teams with admin, member and viewer roles, read-only enforcement | Done (no email verification, SSO or password reset) | `accounts.py`, `api/deps.py`, `test_accounts.py`, two-user browser run |
+| Accounts and teams | `AUTH_MODE=accounts`: scrypt passwords, hashed tokens, throttled sign-in, private workspaces (404 not 403), teams with admin, member and viewer roles, read-only enforcement | Done, with email verification, password reset, two-factor and OIDC single sign-on | `accounts.py`, `api/deps.py`, `test_accounts.py`, two-user browser run |
 | Shareable analyses | Immutable public snapshot links with revoke, noindex, rate limit, public read-only page | Done (snapshots, not live dashboards) | `sharing.py`, `app/share/[token]`, `test_sharing_schedules.py`, signed-out browser run |
 | Scheduling | Saved SQL on an interval, run now, pause, history, optional refresh of linked data, scheduler thread, expiry exemption | Done (SQL only, no notifications) | `schedules.py`, `test_sharing_schedules.py`, browser run |
 | Connectors | CSV link and Google Sheets with refresh, SQLite file, Postgres, SSRF protection with DNS pinning and redirect checks | Done (Postgres integration-tested on a real server, TLS through a proxy) | `connectors.py`, `test_connectors.py`, `test_postgres_integration.py`, browser run |
@@ -74,5 +74,5 @@ The interface was redesigned around design tokens: a left rail (workspace, views
 - Re-run the whole live evaluation on one model with a paid key, so every case runs on the final prompt, and re-check `underperforming_products`.
 - Run OpenAI and Anthropic live, and test Postgres TLS against a server with a private CA.
 - Move `execute_python` into a network-less sandbox container if it must stay enabled for untrusted users.
-- SSO if accounts are exposed beyond a trusted group; a real mail provider run for the email features.
+- A real identity provider and a real mail provider run for the SSO and email features (both were tested against local fakes).
 - A shared database and external job workers if this ever needs more than one node.

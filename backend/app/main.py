@@ -20,6 +20,7 @@ from app.schedules import Scheduler, Schedules
 from app.sharing import Sharing
 from app.limits import RateLimiter
 from app.mailer import Mailer
+from app.sso import Sso
 from app.logging_setup import log_event, request_id_var, session_id_var, setup_logging
 from app.metrics import metrics
 from app.session import SessionManager
@@ -56,6 +57,7 @@ def create_app(
     app.state.db = db
     app.state.accounts = accounts
     app.state.mailer = mailer
+    app.state.sso = Sso(db, settings, accounts)
     app.state.sessions = manager
     app.state.schedules = schedules
     app.state.scheduler = scheduler

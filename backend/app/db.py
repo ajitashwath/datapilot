@@ -24,6 +24,12 @@ CREATE TABLE IF NOT EXISTS email_tokens (
     purpose TEXT NOT NULL,
     expires_at REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS sso_states (
+    state_hash TEXT PRIMARY KEY,
+    nonce TEXT NOT NULL,
+    verifier TEXT NOT NULL,
+    expires_at REAL NOT NULL
+);
 CREATE TABLE IF NOT EXISTS auth_tokens (
     token_hash TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,

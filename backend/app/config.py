@@ -66,6 +66,12 @@ class Settings(BaseSettings):
     verify_token_hours: int = 24
     forgot_per_hour: int = 5
 
+    oidc_issuer: str = ""
+    oidc_client_id: str = ""
+    oidc_client_secret: str = ""
+    oidc_name: str = "single sign-on"
+    oidc_scopes: str = "openid email profile"
+
     def email_enabled(self) -> bool:
         return bool(self.smtp_host and self.smtp_from)
 

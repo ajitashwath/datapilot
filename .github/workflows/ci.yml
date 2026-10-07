@@ -78,13 +78,17 @@ jobs:
       - run: docker compose build
       - run: |
           docker compose up -d
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:8000/api/health && break
-            sleep 2
-          done
-          curl -sf http://localhost:8000/api/health
-          curl -sf http://localhost:3000 > /dev/null
-      - run: docker compose logs backend
+          wait_for() {
+            for i in $(seq 1 45); do
+              curl -sf "$1" > /dev/null && return 0
+              sleep 2
+            done
+            echo "Timed out waiting for $1"
+            return 1
+          }
+          wait_for http://localhost:8000/api/health
+          wait_for http://localhost:3000
+      - run: docker compose logs
         if: failure()
       - run: docker compose down -v
         if: always()

@@ -171,6 +171,8 @@ export const resendVerification = (email: string) => request<{ sent: boolean }>(
 export const changePassword = (current_password: string, new_password: string) =>
   request<{ changed: boolean }>("/api/auth/password", json({ current_password, new_password }));
 
+export const ssoStart = () => request<{ url: string }>("/api/auth/sso/start");
+export const ssoCallback = (code: string, state: string) => request<AuthResponse>("/api/auth/sso/callback", json({ code, state }));
 export const loginWithCode = (challenge: string, code: string) => request<AuthResponse>("/api/auth/login/2fa", json({ challenge, code }));
 export const twoFactorStatus = () => request<TwoFactorStatus>("/api/auth/2fa");
 export const twoFactorSetup = (password: string) => request<TwoFactorSetup>("/api/auth/2fa/setup", json({ password }));
