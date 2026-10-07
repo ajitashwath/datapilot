@@ -64,9 +64,13 @@ A strict self-review of DataPilot. Status values: **Done** (implemented and exer
 - The remembered workspace was shared between users of one browser. It is now stored per user.
 - The lock file omitted `psycopg-binary`, which would have broken Postgres in the slim Docker image. The lock generator now honours extras.
 
+## Interface
+
+The interface was redesigned around design tokens: a left rail (workspace, views, datasets, account menu), a teal accent, light and dark themes (follows the system, switchable from the account menu) and a lighter chat with a floating composer. Every screen, dialog and menu passed an axe audit in both themes, and the layout was checked at phone width.
+
 ## Still open
 
-- Build and run the Docker images, and run the CI workflow on GitHub.
+- Run the CI workflow on GitHub. The Docker images build and the stack runs healthy locally (non-root user, read-only filesystem, state kept on the volume, Python sandbox limits enforced), but the workflow itself has never run.
 - Re-run the whole live evaluation on one model with a paid key, so every case runs on the final prompt, and re-check `underperforming_products`.
 - Run OpenAI and Anthropic live, and test Postgres TLS against a server with a private CA.
 - Move `execute_python` into a network-less sandbox container if it must stay enabled for untrusted users.

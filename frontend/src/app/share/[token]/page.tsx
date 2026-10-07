@@ -24,9 +24,9 @@ export default function SharedAnalysis() {
 
   return (
     <div className="min-h-screen">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-3">
+      <header className="flex items-center justify-between border-b border-slate-200 bg-surface px-5 py-3">
         <div className="flex items-center gap-3">
-          <div aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-violet-500 text-sm font-bold text-white">
+          <div aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-sky-500 text-sm font-bold text-white">
             DP
           </div>
           <p className="text-base font-semibold text-slate-900">DataPilot</p>

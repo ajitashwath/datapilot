@@ -98,7 +98,7 @@ export default function TwoFactorDialog({ onClose }: { onClose: () => void }) {
       {setup && (
         <form onSubmit={confirm}>
           <p className="text-sm text-slate-700">Scan this with an authenticator app, or type the key by hand. Then enter the 6 digit code it shows.</p>
-          <div className="mt-3 flex justify-center rounded-lg bg-white p-2 ring-1 ring-slate-200" role="img" aria-label="QR code for your authenticator app" dangerouslySetInnerHTML={{ __html: setup.qr_svg }} />
+          <div className="mt-3 flex justify-center rounded-lg bg-surface p-2 ring-1 ring-slate-200" role="img" aria-label="QR code for your authenticator app" dangerouslySetInnerHTML={{ __html: setup.qr_svg }} />
           <p className="mt-2 break-all text-center font-mono text-xs text-slate-700">{setup.secret}</p>
           <label htmlFor="tf-code" className="mt-3 block text-sm font-medium text-slate-700">
             Code from the app

@@ -105,13 +105,30 @@ export default function AuthGate({ config, message, onSharedToken, onSignedIn }:
   const submitLabel = !accounts ? "Continue" : asking ? "Verify and sign in" : forgot ? "Send reset link" : mode === "login" ? "Sign in" : "Create account";
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
-      <form onSubmit={submit} className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
+    <main className="grid min-h-screen lg:grid-cols-2">
+      <section aria-hidden="true" className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-sky-600 p-12 text-white lg:flex">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-sm font-bold">DP</div>
+          <span className="text-lg font-semibold">DataPilot</span>
+        </div>
+        <div>
+          <p className="text-4xl font-semibold leading-tight">Ask your data a question. Get an answer you can check.</p>
+          <p className="mt-4 max-w-md text-white/80">Every number comes from SQL or Python that ran on your files, with the code shown right under the answer.</p>
+        </div>
+        <ul className="space-y-2 text-sm text-white/80">
+          <li>Charts, anomalies and joins across your CSVs</li>
+          <li>Private workspaces, teams and share links</li>
+          <li>Scheduled queries with email and webhook alerts</li>
+        </ul>
+        <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
+      </section>
+      <div className="flex items-center justify-center px-4 py-10">
+      <form onSubmit={submit} className="w-full max-w-sm rounded-2xl border border-slate-200 bg-surface p-7 shadow-float">
         <div className="mb-4 flex items-center gap-3">
-          <div aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-violet-500 text-sm font-bold text-white">
+          <div aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-sky-500 text-sm font-bold text-white">
             DP
           </div>
-          <h1 className="text-lg font-semibold text-slate-900">DataPilot</h1>
+          <h1 className="text-lg font-semibold text-slate-900">Sign in to DataPilot</h1>
         </div>
         {accounts ? (
           <>
@@ -125,7 +142,7 @@ export default function AuthGate({ config, message, onSharedToken, onSignedIn }:
                     aria-selected={mode === m}
                     disabled={m === "register" && !config.registration_open}
                     onClick={() => switchMode(m)}
-                    className={`flex-1 rounded-md px-3 py-1 text-sm font-medium disabled:opacity-40 ${mode === m ? "bg-white text-slate-900 shadow-sm" : "text-slate-600"}`}
+                    className={`flex-1 rounded-md px-3 py-1 text-sm font-medium disabled:opacity-40 ${mode === m ? "bg-surface text-slate-900 shadow-sm" : "text-slate-600"}`}
                   >
                     {m === "login" ? "Sign in" : "Create account"}
                   </button>
@@ -215,6 +232,7 @@ export default function AuthGate({ config, message, onSharedToken, onSignedIn }:
           {accounts ? "Your session token is kept in this browser tab only." : "This server requires an access token. It is kept in this browser tab only."}
         </p>
       </form>
+      </div>
     </main>
   );
 }

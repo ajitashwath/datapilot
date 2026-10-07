@@ -14,7 +14,7 @@ type Tab = (typeof TABS)[number];
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-card">
+    <div className="rounded-xl border border-slate-200 bg-surface p-4 shadow-card">
       <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-slate-900">{value}</p>
       {hint && <p className="mt-0.5 text-xs text-slate-500">{hint}</p>}
@@ -89,7 +89,7 @@ function OverviewPanel({ sessionId, dataset }: { sessionId: string; dataset: str
             <h3 className="mb-2 font-semibold text-slate-900">Categorical summaries</h3>
             <div className="space-y-3">
               {overview.categories.map((c) => (
-                <div key={c.column} className="rounded-xl border border-slate-200 bg-white p-4">
+                <div key={c.column} className="rounded-xl border border-slate-200 bg-surface p-4">
                   <p className="text-sm font-medium text-slate-800">
                     {c.column} <span className="font-normal text-slate-500">({c.distinct} values)</span>
                   </p>
@@ -119,7 +119,7 @@ function OverviewPanel({ sessionId, dataset }: { sessionId: string; dataset: str
           {overview.missing.length === 0 ? (
             <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">No missing values.</p>
           ) : (
-            <ul className="space-y-2 rounded-xl border border-slate-200 bg-white p-4">
+            <ul className="space-y-2 rounded-xl border border-slate-200 bg-surface p-4">
               {overview.missing.map((m) => (
                 <li key={m.column} className="text-xs text-slate-600">
                   <div className="flex justify-between">
@@ -163,7 +163,7 @@ function PreviewPanel({ sessionId, dataset }: { sessionId: string; dataset: stri
 
 function SchemaPanel({ profile }: { profile: DatasetProfile }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-surface">
       <div tabIndex={0} role="region" aria-label="Schema table" className="scroll-thin overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
@@ -225,7 +225,7 @@ export default function DataExplorer({
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`rounded-md px-3 py-1 text-sm font-medium transition ${tab === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+                className={`rounded-md px-3 py-1 text-sm font-medium transition ${tab === t ? "bg-surface text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
               >
                 {t}
               </button>

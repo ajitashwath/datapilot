@@ -1,13 +1,25 @@
 import type { Config } from "tailwindcss";
 
+const token = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
+const scale = (name: string, steps: number[]) => Object.fromEntries(steps.map((step) => [step, token(`${name}-${step}`)]));
+
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        brand: { 50: "#eef2ff", 100: "#e0e7ff", 500: "#6366f1", 600: "#4f46e5", 700: "#4338ca" },
+        slate: scale("slate", [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
+        brand: scale("brand", [50, 100, 500, 600, 700]),
+        surface: token("surface"),
+        ink: token("ink"),
+        code: token("code"),
+        "code-fg": token("code-fg"),
       },
-      boxShadow: { card: "0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.04)" },
+      boxShadow: {
+        card: "0 1px 2px rgb(var(--shadow) / 0.05), 0 6px 20px rgb(var(--shadow) / 0.05)",
+        float: "0 10px 40px rgb(var(--shadow) / 0.14)",
+      },
     },
   },
   plugins: [],

@@ -83,7 +83,7 @@ export default function AssistantMessage({ message, onRetry, onSchedule }: { mes
 
   return (
     <div className="flex gap-3" role="article" aria-label="Assistant answer" aria-busy={message.status === "streaming"}>
-      <div aria-hidden="true" className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-violet-500 text-xs font-bold text-white">DP</div>
+      <div aria-hidden="true" className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-sky-500 text-xs font-bold text-white">DP</div>
       <div className="min-w-0 flex-1">
         {toolSteps.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-1.5">

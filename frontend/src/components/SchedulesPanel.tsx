@@ -182,11 +182,11 @@ export default function SchedulesPanel({
         </p>
       )}
       {schedules.length === 0 ? (
-        <p className="mt-4 rounded-lg bg-white p-4 text-sm text-slate-500 ring-1 ring-slate-200">No schedules yet.</p>
+        <p className="mt-4 rounded-lg bg-surface p-4 text-sm text-slate-500 ring-1 ring-slate-200">No schedules yet.</p>
       ) : (
         <ul className="mt-4 space-y-3">
           {schedules.map((s) => (
-            <li key={s.id} className="rounded-xl border border-slate-200 bg-white p-4">
+            <li key={s.id} className="rounded-xl border border-slate-200 bg-surface p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="font-medium text-slate-900">{s.name}</p>
@@ -217,7 +217,7 @@ export default function SchedulesPanel({
                   )}
                 </div>
               </div>
-              <pre tabIndex={0} aria-label="Scheduled SQL" className="scroll-thin mt-2 overflow-x-auto rounded-lg bg-slate-900 p-2 text-xs text-slate-100">
+              <pre tabIndex={0} aria-label="Scheduled SQL" className="scroll-thin mt-2 overflow-x-auto rounded-lg bg-code p-2 text-xs text-code-fg">
                 <code>{s.sql}</code>
               </pre>
               {open === s.id && (runs.length ? runs.slice(0, 3).map((run) => <RunView key={run.id} run={run} />) : <p className="mt-2 text-sm text-slate-500">No runs yet.</p>)}

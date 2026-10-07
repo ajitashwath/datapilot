@@ -21,7 +21,7 @@ import {
 import { compactNumber, formatNumber } from "@/lib/format";
 import type { ChartSpec } from "@/lib/types";
 
-const COLORS = ["#4f46e5", "#0d9488", "#d97706", "#e11d48", "#0284c7", "#7c3aed", "#65a30d", "#db2777"];
+const COLORS = ["#14a89a", "#6366f1", "#f59e0b", "#f43f5e", "#0ea5e9", "#8b5cf6", "#84cc16", "#ec4899"];
 const axisStyle = { fontSize: 12, fill: "#64748b" };
 const margin = { top: 8, right: 16, bottom: 28, left: 8 };
 
@@ -126,7 +126,7 @@ export default function ChartView({ spec, height = 320 }: { spec: ChartSpec; hei
   const canSwitch = (SWITCHABLE as readonly string[]).includes(spec.type) && spec.y_keys.length === 1 && spec.data.length <= 12;
   const shown: ChartSpec = { ...spec, type };
   return (
-    <figure className="rounded-xl border border-slate-200 bg-white p-4" aria-label={`Chart: ${spec.title}`}>
+    <figure className="rounded-xl border border-slate-200 bg-surface p-4" aria-label={`Chart: ${spec.title}`}>
       <div className="mb-2 flex items-center justify-between gap-2">
         <figcaption className="text-sm font-semibold text-slate-800">{spec.title}</figcaption>
         {canSwitch && (
@@ -135,7 +135,7 @@ export default function ChartView({ spec, height = 320 }: { spec: ChartSpec; hei
             <select
               value={type}
               onChange={(e) => setType(e.target.value as ChartSpec["type"])}
-              className="rounded-md border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-700"
+              className="rounded-md border border-slate-300 bg-surface px-1.5 py-0.5 text-xs text-slate-700"
             >
               {SWITCHABLE.map((t) => (
                 <option key={t} value={t}>

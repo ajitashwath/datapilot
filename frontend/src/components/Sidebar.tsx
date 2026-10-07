@@ -37,7 +37,7 @@ function UploadZone({ onUpload, uploading, config }: { onUpload: (files: File[])
         if (files.length) onUpload(files);
       }}
       onClick={() => input.current?.click()}
-      className={`cursor-pointer rounded-xl border-2 border-dashed px-4 py-5 text-center transition ${dragging ? "border-brand-500 bg-brand-50" : "border-slate-300 bg-white hover:border-brand-500"}`}
+      className={`cursor-pointer rounded-xl border border-dashed px-4 py-4 text-center transition ${dragging ? "border-brand-500 bg-brand-50" : "border-slate-300 hover:border-brand-500 hover:bg-brand-50"}`}
     >
       <input
         ref={input}
@@ -64,7 +64,7 @@ function DatasetItem({ detail, active, readOnly, onSelect, onRemove, onRefresh }
   return (
     <li
       onClick={onSelect}
-      className={`group cursor-pointer rounded-xl border px-3 py-2.5 transition ${active ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-slate-300"}`}
+      className={`group cursor-pointer rounded-xl border px-3 py-2.5 transition ${active ? "border-brand-500 bg-brand-50 shadow-card" : "border-transparent bg-surface shadow-card hover:border-slate-300"}`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="truncate text-sm font-semibold text-slate-800">{p.name}</span>
@@ -109,7 +109,7 @@ function DatasetItem({ detail, active, readOnly, onSelect, onRemove, onRefresh }
 
 function RelationshipRow({ r }: { r: Relationship }) {
   return (
-    <li className="rounded-lg bg-white px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200">
+    <li className="rounded-lg bg-surface px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200">
       <p className="font-medium text-slate-800">
         {r.left_table}.{r.left_column} <span className="text-slate-500">&rarr;</span> {r.right_table}.{r.right_column}
       </p>
@@ -128,12 +128,12 @@ function RelationshipForm({ datasets, onAdd }: { datasets: DatasetDetail[]; onAd
 
   const picker = (value: { table: string; column: string }, set: (v: { table: string; column: string }) => void) => (
     <div className="flex gap-1.5">
-      <select value={value.table} onChange={(e) => set({ table: e.target.value, column: "" })} className="w-1/2 rounded-md border border-slate-300 bg-white px-1.5 py-1 text-xs">
+      <select value={value.table} onChange={(e) => set({ table: e.target.value, column: "" })} className="w-1/2 rounded-md border border-slate-300 bg-surface px-1.5 py-1 text-xs">
         {datasets.map((d) => (
           <option key={d.profile.name}>{d.profile.name}</option>
         ))}
       </select>
-      <select value={value.column} onChange={(e) => set({ ...value, column: e.target.value })} className="w-1/2 rounded-md border border-slate-300 bg-white px-1.5 py-1 text-xs">
+      <select value={value.column} onChange={(e) => set({ ...value, column: e.target.value })} className="w-1/2 rounded-md border border-slate-300 bg-surface px-1.5 py-1 text-xs">
         <option value="">column</option>
         {columnsOf(value.table).map((c) => (
           <option key={c}>{c}</option>
@@ -160,7 +160,7 @@ function RelationshipForm({ datasets, onAdd }: { datasets: DatasetDetail[]; onAd
         >
           {picker(left, setLeft)}
           {picker(right, setRight)}
-          <button type="submit" disabled={!left.column || !right.column} className="w-full rounded-md bg-slate-800 py-1.5 text-xs font-medium text-white disabled:opacity-40">
+          <button type="submit" disabled={!left.column || !right.column} className="w-full rounded-md bg-ink py-1.5 text-xs font-medium text-white disabled:opacity-40">
             Add relationship
           </button>
         </form>
@@ -174,11 +174,11 @@ export default function Sidebar(props: SidebarProps) {
   const datasets = state?.datasets ?? [];
   const filters = Object.entries(state?.filters ?? {});
   return (
-    <aside aria-label="Datasets" className="scroll-thin flex h-full w-80 max-w-[85vw] shrink-0 flex-col gap-5 overflow-y-auto border-r border-slate-200 bg-slate-50 p-4">
+    <div aria-label="Datasets" role="region" className="flex flex-col gap-5">
       {!readOnly && (
         <>
           <UploadZone onUpload={onUpload} uploading={uploading} config={config} />
-          <button onClick={onConnect} className="-mt-2 rounded-lg px-3 py-2 text-sm font-medium text-brand-700 ring-1 ring-brand-100 hover:bg-brand-50">
+          <button onClick={onConnect} className="-mt-2 rounded-lg px-3 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">
             Add from a link, SQLite or Postgres
           </button>
         </>
@@ -194,13 +194,13 @@ export default function Sidebar(props: SidebarProps) {
           )}
         </div>
         {datasets.length === 0 ? (
-          <p className="rounded-lg bg-white p-3 text-sm text-slate-500 ring-1 ring-slate-200">No datasets yet.</p>
+          <p className="rounded-lg bg-surface p-3 text-sm text-slate-500 ring-1 ring-slate-200">No datasets yet.</p>
         ) : (
           <ul className="space-y-2">
             {datasets.length > 1 && (
               <li
                 onClick={() => onSelect(null)}
-                className={`cursor-pointer rounded-xl border px-3 py-2 text-sm font-medium ${selected === null ? "border-brand-500 bg-brand-50 text-brand-700" : "border-slate-200 bg-white text-slate-600"}`}
+                className={`cursor-pointer rounded-xl border px-3 py-2 text-sm font-medium ${selected === null ? "border-brand-500 bg-brand-50 text-brand-700" : "border-slate-200 bg-surface text-slate-600"}`}
               >
                 All datasets
               </li>
@@ -245,6 +245,6 @@ export default function Sidebar(props: SidebarProps) {
           </div>
         </section>
       )}
-    </aside>
+    </div>
   );
 }
