@@ -1,0 +1,122 @@
+"use client";
+
+import { useState } from "react";
+import { ApiError, login, register, setToken } from "@/lib/api";
+import type { AppConfig } from "@/lib/types";
+
+interface AuthGateProps {
+  config: AppConfig;
+  message: string | null;
+  onSharedToken: (token: string) => void;
+  onSignedIn: () => void;
+}
+
+const inputClass = "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500";
+
+export default function AuthGate({ config, message, onSharedToken, onSignedIn }: AuthGateProps) {
+  const accounts = config.auth_mode === "accounts";
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [secret, setSecret] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const shown = error ?? message;
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+    if (!accounts) {
+      if (secret.trim()) onSharedToken(secret.trim());
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = mode === "login" ? await login({ email, password: secret }) : await register({ email, password: secret, name });
+      setToken(result.token);
+      onSignedIn();
+    } catch (failure) {
+      setError(failure instanceof ApiError ? failure.message : "Could not sign in. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <main className="flex min-h-screen items-center justify-center px-4">
+      <form onSubmit={submit} className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
+        <div className="mb-4 flex items-center gap-3">
+          <div aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-violet-500 text-sm font-bold text-white">
+            DP
+          </div>
+          <h1 className="text-lg font-semibold text-slate-900">DataPilot</h1>
+        </div>
+        {accounts ? (
+          <>
+            <div className="mb-3 flex rounded-lg bg-slate-100 p-1" role="tablist">
+              {(["login", "register"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === m}
+                  disabled={m === "register" && !config.registration_open}
+                  onClick={() => setMode(m)}
+                  className={`flex-1 rounded-md px-3 py-1 text-sm font-medium disabled:opacity-40 ${mode === m ? "bg-white text-slate-900 shadow-sm" : "text-slate-600"}`}
+                >
+                  {m === "login" ? "Sign in" : "Create account"}
+                </button>
+              ))}
+            </div>
+            {mode === "register" && (
+              <>
+                <label htmlFor="auth-name" className="text-sm font-medium text-slate-700">
+                  Name
+                </label>
+                <input id="auth-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" className={inputClass} />
+              </>
+            )}
+            <label htmlFor="auth-email" className="mt-3 block text-sm font-medium text-slate-700">
+              Email
+            </label>
+            <input id="auth-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" className={inputClass} />
+            <label htmlFor="auth-password" className="mt-3 block text-sm font-medium text-slate-700">
+              Password
+            </label>
+            <input
+              id="auth-password"
+              type="password"
+              value={secret}
+              onChange={(e) => setSecret(e.target.value)}
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              className={inputClass}
+            />
+            {mode === "register" && <p className="mt-1 text-xs text-slate-500">At least 10 characters.</p>}
+          </>
+        ) : (
+          <>
+            <label htmlFor="access-token" className="text-sm font-medium text-slate-700">
+              Access token
+            </label>
+            <input id="access-token" type="password" autoComplete="off" value={secret} onChange={(e) => setSecret(e.target.value)} className={inputClass} />
+          </>
+        )}
+        {shown && (
+          <p role="alert" className="mt-2 text-sm text-rose-700">
+            {shown}
+          </p>
+        )}
+        <button
+          type="submit"
+          disabled={busy || !secret.trim() || (accounts && !email.trim())}
+          className="mt-4 w-full rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-40"
+        >
+          {busy ? "Please wait..." : accounts ? (mode === "login" ? "Sign in" : "Create account") : "Continue"}
+        </button>
+        <p className="mt-3 text-xs text-slate-500">
+          {accounts ? "Your session token is kept in this browser tab only." : "This server requires an access token. It is kept in this browser tab only."}
+        </p>
+      </form>
+    </main>
+  );
+}

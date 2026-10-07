@@ -23,17 +23,19 @@ def column_stats(con: duckdb.DuckDBPyConnection, table: str, column: str) -> tup
     return con.execute(f"SELECT count({quote(column)}), count(DISTINCT {quote(column)}) FROM {quote(table)}").fetchone()
 
 
+def distinct_values(table: str, column: str) -> str:
+    return f"SELECT DISTINCT CAST({quote(column)} AS VARCHAR) AS v FROM {quote(table)} WHERE {quote(column)} IS NOT NULL"
+
+
+def share_of_matches(con: duckdb.DuckDBPyConnection, left: tuple[str, str], right: tuple[str, str]) -> float:
+    total, hits = con.execute(
+        f"SELECT count(*), count(y.v) FROM ({distinct_values(*left)}) x LEFT JOIN ({distinct_values(*right)}) y ON x.v = y.v"
+    ).fetchone()
+    return hits / total if total else 0.0
+
+
 def overlap_pct(con: duckdb.DuckDBPyConnection, left: tuple[str, str], right: tuple[str, str]) -> float:
-    sql = (
-        f"WITH a AS (SELECT DISTINCT CAST({quote(left[1])} AS VARCHAR) v FROM {quote(left[0])} WHERE {quote(left[1])} IS NOT NULL), "
-        f"b AS (SELECT DISTINCT CAST({quote(right[1])} AS VARCHAR) v FROM {quote(right[0])} WHERE {quote(right[1])} IS NOT NULL) "
-        "SELECT (SELECT count(*) FROM a), (SELECT count(*) FROM a WHERE v IN (SELECT v FROM b)), "
-        "(SELECT count(*) FROM b), (SELECT count(*) FROM b WHERE v IN (SELECT v FROM a))"
-    )
-    total_a, hit_a, total_b, hit_b = con.execute(sql).fetchone()
-    if not total_a or not total_b:
-        return 0.0
-    return round(max(hit_a / total_a, hit_b / total_b) * 100, 1)
+    return round(max(share_of_matches(con, left, right), share_of_matches(con, right, left)) * 100, 1)
 
 
 def cardinality_for(con: duckdb.DuckDBPyConnection, left: tuple[str, str], right: tuple[str, str]) -> str:

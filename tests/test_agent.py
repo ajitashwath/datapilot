@@ -158,6 +158,13 @@ class TestConversationContext:
         collect(session, "hello", llm)
         assert 'currently has "orders" selected' in llm.requests[0][0]
 
+    def test_schema_lists_distinct_counts_so_the_model_can_tell_ids_from_names(self, session):
+        llm = ScriptedLLM(say("hi"))
+        collect(session, "hello", llm)
+        system = llm.requests[0][0]
+        assert '"customer_name" VARCHAR (text, 6' in system or '"customer_name" VARCHAR (text,' in system
+        assert "distinct" in system and "unique identifier column" in system
+
     def test_schema_not_data_is_sent_to_llm(self, session):
         llm = ScriptedLLM(say("hi"))
         collect(session, "hello", llm)
@@ -184,6 +191,23 @@ class TestFailureHandling:
         events = collect(session, "q", llm)
         assert "maximum number of analysis steps" in "".join(e.delta for e in of_type(events, TextEvent))
         assert isinstance(events[-1], DoneEvent)
+
+    def test_model_that_goes_silent_after_tools_is_asked_again_without_tools(self, session):
+        llm = ScriptedLLM(call("get_schema"), [], say("The data has three tables."))
+        events = collect(session, "what data do I have?", llm)
+        assert "".join(e.delta for e in of_type(events, TextEvent)) == "The data has three tables."
+        assert llm.tool_counts[0] == llm.tool_counts[1] > 0 and llm.tool_counts[2] == 0
+        assert isinstance(events[-1], DoneEvent) and of_type(events, DoneEvent)[0].tools_used == ["get_schema"]
+
+    def test_a_model_that_stays_silent_gets_an_honest_fallback_message(self, session):
+        llm = ScriptedLLM(call("get_schema"), [], [])
+        text = "".join(e.delta for e in of_type(collect(session, "q", llm), TextEvent))
+        assert "could not produce an answer" in text and llm.tool_counts[2] == 0
+
+    def test_no_retry_when_the_model_answered_normally(self, session):
+        llm = ScriptedLLM(call("get_schema"), say("Fine."))
+        collect(session, "q", llm)
+        assert len(llm.tool_counts) == 2
 
     def test_failed_tool_does_not_abort_turn(self, session):
         llm = ScriptedLLM(call("execute_sql", query="DROP TABLE orders"), say("That query is not allowed."))

@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from app.data.charts import build_chart
-from app.data.loader import table_name_for, validate_upload
+from app.data.loader import ensure_utf8, table_name_for, validate_file
 from app.data.sandbox import run_python
 from app.errors import UserError
 from conftest import DATA_DIR
@@ -12,29 +12,39 @@ def csv_bytes(text: str) -> bytes:
     return text.encode("utf-8")
 
 
+def written(tmp_path, content: bytes, name: str = "data.csv"):
+    path = tmp_path / name
+    path.write_bytes(content)
+    return path
+
+
 class TestCsvValidation:
-    def test_rejects_wrong_extension(self):
+    def test_rejects_wrong_extension(self, tmp_path):
         with pytest.raises(UserError) as exc:
-            validate_upload("data.xlsx", b"a,b\n1,2", 5)
+            validate_file("data.xlsx", written(tmp_path, b"a,b\n1,2"), 5)
         assert exc.value.status == 415
 
-    def test_rejects_empty_file(self):
+    def test_rejects_empty_file(self, tmp_path):
         with pytest.raises(UserError) as exc:
-            validate_upload("data.csv", b"   \n", 5)
+            validate_file("data.csv", written(tmp_path, b"   \n"), 5)
         assert exc.value.code == "empty_file"
 
-    def test_rejects_huge_file(self):
+    def test_rejects_huge_file(self, tmp_path):
         with pytest.raises(UserError) as exc:
-            validate_upload("data.csv", b"a\n" * (2 * 1024 * 1024), 1)
+            validate_file("data.csv", written(tmp_path, b"a\n" * (2 * 1024 * 1024)), 1)
         assert exc.value.status == 413
 
-    def test_rejects_binary_content(self):
+    def test_rejects_binary_content(self, tmp_path):
         with pytest.raises(UserError):
-            validate_upload("data.csv", b"\x00\x01\x02binary", 5)
+            validate_file("data.csv", written(tmp_path, b"\x00\x01\x02binary"), 5)
 
-    def test_transcodes_latin1(self):
-        content = "name\ncaf\xe9".encode("latin-1")
-        assert "café" in validate_upload("data.csv", content, 5).decode("utf-8")
+    def test_transcodes_latin1(self, tmp_path):
+        path = written(tmp_path, b"name\ncaf\xe9")
+        assert "caf\xe9" in ensure_utf8(path).read_text(encoding="utf-8")
+
+    def test_valid_utf8_is_left_untouched(self, tmp_path):
+        path = written(tmp_path, "name\ncaf\xe9".encode("utf-8"))
+        assert ensure_utf8(path) == path
 
     def test_table_names_are_safe_and_unique(self):
         assert table_name_for("My Sales 2024!.csv", set()) == "my_sales_2024"
@@ -186,6 +196,12 @@ class TestRelationships:
         relationship = store.add_relationship(("orders", "region"), ("customers", "region"))
         assert relationship.source == "user" and relationship.cardinality == "many-to-many"
 
+    def test_tables_named_like_internal_aliases_do_not_break_inference(self, empty_store):
+        empty_store.add_csv("a.csv", b"a,b\n1,x\n2,y\n3,z\n")
+        empty_store.add_csv("b.csv", b"a,b\n1,x\n2,y\n3,z\n")
+        assert {"a", "b"} <= empty_store.table_names()
+        assert empty_store.add_relationship(("a", "b"), ("b", "a")).overlap_pct == 0.0
+
     def test_relationship_with_unknown_column_fails(self, store):
         with pytest.raises(UserError):
             store.add_relationship(("orders", "nope"), ("customers", "customer_id"))
@@ -297,6 +313,16 @@ class TestPythonSandbox:
         )
         out = self.run(store, code)
         assert out["ok"] and out["result"]["row_count"] >= 6 and "groups, slope" in out["result"]["rows"][0][-1]
+
+    def test_memory_limit_stops_a_memory_hog_but_not_normal_work(self, store):
+        paths = {"orders": store.parquet_path("orders")}
+        fine = run_python("result = int(np.ones(2_000_000).sum())", paths, timeout=20, memory_mb=1024, max_rows=10)
+        assert fine["ok"] and fine["result"]["value"] == 2_000_000
+        try:
+            hog = run_python("x = np.ones(300_000_000)\nresult = float(x.sum())", paths, timeout=20, memory_mb=1024, max_rows=10)
+            assert not hog["ok"]
+        except UserError as exc:
+            assert "memory" in exc.message.lower() or "crash" in exc.message.lower()
 
     def test_infinite_loop_times_out(self, store):
         with pytest.raises(UserError) as exc:

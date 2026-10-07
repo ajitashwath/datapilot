@@ -15,9 +15,11 @@ class ScriptedLLM(LLMProvider):
     def __init__(self, *turns: list | Callable[[list[Message]], list] | Exception):
         self.turns = list(turns)
         self.requests: list[tuple[str, list[Message]]] = []
+        self.tool_counts: list[int] = []
 
     def stream(self, system: str, messages: list[Message], tools: list[ToolSpec]) -> Iterator:
         self.requests.append((system, list(messages)))
+        self.tool_counts.append(len(tools))
         if not self.turns:
             raise AssertionError("ScriptedLLM ran out of scripted turns")
         turn = self.turns.pop(0)

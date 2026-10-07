@@ -30,6 +30,7 @@ export interface DatasetProfile {
   column_count: number;
   duplicate_rows: number;
   skipped_rows: number;
+  source: string | null;
   columns: ColumnProfile[];
 }
 
@@ -51,6 +52,9 @@ export interface Relationship {
 
 export interface SessionState {
   session_id: string;
+  name: string;
+  role: "owner" | "writer" | "reader";
+  team_id: string | null;
   datasets: DatasetDetail[];
   relationships: Relationship[];
   filters: Record<string, string>;
@@ -137,6 +141,12 @@ export interface AppConfig {
   python_timeout_seconds: number;
   max_result_rows: number;
   sample_datasets: string[];
+  auth_required: boolean;
+  auth_mode: "none" | "accounts";
+  registration_open: boolean;
+  python_enabled: boolean;
+  schedule_min_minutes: number;
+  allow_private_connections: boolean;
 }
 
 export interface UploadResponse {
@@ -164,4 +174,95 @@ export interface ChatMessage {
   error?: string;
   warnings: string[];
   durationMs?: number;
+}
+
+export interface TranscriptEntry {
+  question: string;
+  events: StreamEvent[];
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  role: "admin" | "member" | "viewer";
+}
+
+export interface Member {
+  user_id: string;
+  email: string;
+  name: string;
+  role: string;
+}
+
+export interface WorkspaceInfo {
+  session_id: string;
+  name: string;
+  role: string;
+  team_id: string | null;
+  team_name: string | null;
+  updated_at: number;
+}
+
+export interface ShareLink {
+  token: string;
+  title: string;
+  created_at: number;
+  revoked: boolean;
+}
+
+export interface SharedSnapshot {
+  title: string;
+  created_at: number;
+  datasets: { name: string; rows: number; columns: number }[];
+  transcript: TranscriptEntry[];
+}
+
+export interface ScheduleRun {
+  id: string;
+  ran_at: number;
+  ok: boolean;
+  error: string | null;
+  columns: string[];
+  rows: unknown[][];
+  row_count: number;
+  note: string | null;
+}
+
+export interface Schedule {
+  id: string;
+  name: string;
+  sql: string;
+  every_minutes: number;
+  refresh_sources: boolean;
+  enabled: boolean;
+  next_run_at: number;
+  last_run: { id: string; ran_at: number; ok: boolean; error: string | null; row_count: number; note: string | null } | null;
+}
+
+export interface JobStatus {
+  id: string;
+  kind: string;
+  status: "queued" | "running" | "done" | "error";
+  message: string;
+  datasets: string[];
+}
+
+export interface PostgresConnection {
+  host: string;
+  port: number;
+  dbname: string;
+  user: string;
+  password: string;
+  sslmode: "require" | "prefer" | "disable";
 }

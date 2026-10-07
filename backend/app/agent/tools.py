@@ -14,6 +14,7 @@ from app.data.relations import infer_between
 from app.data.sandbox import run_python
 from app.errors import UserError
 from app.logging_setup import log_event
+from app.metrics import metrics
 from app.models import AnomalyResult, TableResult, ToolResult
 from app.session import Session
 
@@ -240,9 +241,11 @@ TOOLS = [
 TOOLS_BY_NAME = {t.name: t for t in TOOLS}
 
 
-def tool_specs() -> list[ToolSpec]:
+def tool_specs(python_enabled: bool = True) -> list[ToolSpec]:
     specs = []
     for tool in TOOLS:
+        if tool.name == "execute_python" and not python_enabled:
+            continue
         schema = tool.args_model.model_json_schema()
         schema.pop("title", None)
         specs.append(ToolSpec(name=tool.name, description=tool.description, input_schema=schema))
@@ -253,6 +256,8 @@ def run_tool(session: Session, name: str, raw_input: Any) -> ToolResult:
     tool = TOOLS_BY_NAME.get(name)
     if tool is None:
         return ToolResult(ok=False, error=f"Unknown tool '{name}'. Available tools: {', '.join(TOOLS_BY_NAME)}.")
+    if name == "execute_python" and session.store.settings.sandbox_mode == "off":
+        return ToolResult(ok=False, error="Python execution is disabled on this server. Use execute_sql instead.")
     started = time.perf_counter()
     try:
         args = tool.args_model.model_validate(raw_input if isinstance(raw_input, dict) else {})
@@ -265,9 +270,12 @@ def run_tool(session: Session, name: str, raw_input: Any) -> ToolResult:
     except Exception:
         log_event("tool_exception", tool=name, exc_info=True)
         result = ToolResult(ok=False, error="The tool failed unexpectedly. Try a simpler approach.")
+    elapsed = time.perf_counter() - started
+    metrics.inc("datapilot_tool_calls_total", tool=name, ok=str(result.ok).lower())
+    metrics.inc("datapilot_tool_seconds_sum", elapsed, tool=name)
     log_event(
         "tool_call", tool=name, ok=result.ok, error=result.error,
-        duration_ms=round((time.perf_counter() - started) * 1000, 1), args=json.dumps(raw_input, default=str)[:300],
+        duration_ms=round(elapsed * 1000, 1), args=json.dumps(raw_input, default=str)[:300],
     )
     return result
 

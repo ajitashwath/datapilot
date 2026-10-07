@@ -22,7 +22,7 @@ export function IssueList({ issues }: { issues: QualityIssue[] }) {
           <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${severityStyle[issue.severity]}`}>{issue.severity}</span>
           <div className="min-w-0">
             <p className="text-sm text-slate-700">{issue.message}</p>
-            <p className="mt-0.5 text-xs text-slate-400">{issue.type.replace(/_/g, " ")}</p>
+            <p className="mt-0.5 text-xs text-slate-500">{issue.type.replace(/_/g, " ")}</p>
           </div>
         </li>
       ))}

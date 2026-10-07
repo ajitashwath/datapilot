@@ -4,6 +4,7 @@ import CodeBlock from "./CodeBlock";
 import Markdown from "./Markdown";
 import { IssueList } from "./QualityPanel";
 import ResultTable from "./ResultTable";
+import { finalText } from "@/lib/chatState";
 import type { ChatMessage, QualityIssue, Step, ToolResult } from "@/lib/types";
 
 type ToolStep = Extract<Step, { kind: "tool" }>;
@@ -30,12 +31,12 @@ function ToolPill({ step }: { step: ToolStep }) {
     <span title={step.result?.error ?? undefined} className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${style}`}>
       {running ? <span className="h-2 w-2 animate-pulse rounded-full bg-brand-500" /> : <span>{failed ? "✕" : "✓"}</span>}
       {TOOL_LABELS[step.name] ?? step.name}
-      {step.durationMs !== undefined && <span className="opacity-60">{Math.round(step.durationMs)} ms</span>}
+      {step.durationMs !== undefined && <span>{Math.round(step.durationMs)} ms</span>}
     </span>
   );
 }
 
-function Artifacts({ results }: { results: ToolResult[] }) {
+function Artifacts({ results, onSchedule }: { results: ToolResult[]; onSchedule?: (sql: string) => void }) {
   const charts = results.filter((r) => r.chart).map((r) => r.chart!);
   const anomalies = results.flatMap((r) => r.anomalies);
   const tables = results.filter((r) => r.table && !r.chart && r.anomalies.length === 0);
@@ -54,7 +55,18 @@ function Artifacts({ results }: { results: ToolResult[] }) {
       {quality && <IssueList issues={quality.data.issues as QualityIssue[]} />}
       {lastTable && charts.length === 0 && <ResultTable table={lastTable} />}
       {sqls.map((sql, i) => (
-        <CodeBlock key={i} label={sqls.length > 1 ? `SQL query ${i + 1}` : "SQL query"} code={sql} />
+        <CodeBlock
+          key={i}
+          label={sqls.length > 1 ? `SQL query ${i + 1}` : "SQL query"}
+          code={sql}
+          action={
+            onSchedule && (
+              <button onClick={() => onSchedule(sql)} className="rounded-md px-2 py-0.5 text-xs font-medium text-brand-600 ring-1 ring-brand-100 hover:bg-brand-50">
+                Schedule
+              </button>
+            )
+          }
+        />
       ))}
       {codes.map((code, i) => (
         <CodeBlock key={i} label="Python code" code={code} />
@@ -63,20 +75,15 @@ function Artifacts({ results }: { results: ToolResult[] }) {
   );
 }
 
-export default function AssistantMessage({ message, onRetry }: { message: ChatMessage; onRetry?: () => void }) {
+export default function AssistantMessage({ message, onRetry, onSchedule }: { message: ChatMessage; onRetry?: () => void; onSchedule?: (sql: string) => void }) {
   const toolSteps = message.steps.filter((s): s is ToolStep => s.kind === "tool");
-  const lastToolIndex = message.steps.map((s) => s.kind).lastIndexOf("tool");
-  const finalText = message.steps
-    .slice(lastToolIndex + 1)
-    .filter((s): s is Extract<Step, { kind: "text" }> => s.kind === "text")
-    .map((s) => s.text)
-    .join("\n\n");
+  const answer = finalText(message);
   const results = toolSteps.flatMap((s) => (s.result?.ok ? [s.result] : []));
-  const waiting = message.status === "streaming" && !finalText;
+  const waiting = message.status === "streaming" && !answer;
 
   return (
-    <div className="flex gap-3">
-      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-violet-500 text-xs font-bold text-white">DP</div>
+    <div className="flex gap-3" role="article" aria-label="Assistant answer" aria-busy={message.status === "streaming"}>
+      <div aria-hidden="true" className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-violet-500 text-xs font-bold text-white">DP</div>
       <div className="min-w-0 flex-1">
         {toolSteps.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-1.5">
@@ -86,22 +93,22 @@ export default function AssistantMessage({ message, onRetry }: { message: ChatMe
           </div>
         )}
         {waiting && (
-          <div className="flex items-center gap-1.5 py-2 text-slate-400">
+          <div role="status" aria-live="polite" className="flex items-center gap-1.5 py-2 text-slate-500">
             {[0, 1, 2].map((i) => (
               <span key={i} className="typing-dot h-2 w-2 rounded-full bg-slate-400" style={{ animationDelay: `${i * 0.15}s` }} />
             ))}
             <span className="ml-2 text-sm">{toolSteps.length ? "Analyzing" : "Thinking"}</span>
           </div>
         )}
-        {finalText && <Markdown text={finalText} />}
-        <Artifacts results={results} />
+        {answer && <Markdown text={answer} />}
+        <Artifacts results={results} onSchedule={onSchedule} />
         {message.warnings.map((w, i) => (
           <p key={i} className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 ring-1 ring-amber-200">
             {w}
           </p>
         ))}
         {message.status === "error" && (
-          <div className="mt-2 flex items-start justify-between gap-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 ring-1 ring-rose-200">
+          <div role="alert" className="mt-2 flex items-start justify-between gap-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 ring-1 ring-rose-200">
             <span>{message.error}</span>
             {onRetry && (
               <button onClick={onRetry} className="shrink-0 font-medium underline">
@@ -111,7 +118,7 @@ export default function AssistantMessage({ message, onRetry }: { message: ChatMe
           </div>
         )}
         {message.status === "done" && message.durationMs !== undefined && toolSteps.length > 0 && (
-          <p className="mt-2 text-xs text-slate-400">
+          <p className="mt-2 text-xs text-slate-500">
             Computed with {toolSteps.length} tool call{toolSteps.length === 1 ? "" : "s"} in {(message.durationMs / 1000).toFixed(1)} s
           </p>
         )}

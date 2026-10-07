@@ -225,3 +225,7 @@ node_modules/
 frontend/next-env.d.ts
 *.tsbuildinfo
 !frontend/src/lib/
+
+# Local data
+var/
+frontend/AGENTS.md

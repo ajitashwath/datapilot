@@ -1,16 +1,53 @@
 import { parseSseChunk } from "./sse";
 import type {
   AppConfig,
+  AuthResponse,
+  JobStatus,
+  Member,
+  PostgresConnection,
+  Schedule,
+  ScheduleRun,
+  ShareLink,
+  SharedSnapshot,
+  Team,
+  User,
+  WorkspaceInfo,
   Overview,
   QualityReport,
   Relationship,
   SessionState,
   StreamEvent,
   TableResult,
+  TranscriptEntry,
   UploadResponse,
 } from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+const TOKEN_KEY = "datapilot-token";
+
+export function getToken(): string | null {
+  try {
+    return sessionStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setToken(token: string | null): void {
+  try {
+    if (token) sessionStorage.setItem(TOKEN_KEY, token);
+    else sessionStorage.removeItem(TOKEN_KEY);
+  } catch {
+    return;
+  }
+}
+
+function withAuth(init?: RequestInit): RequestInit {
+  const token = getToken();
+  if (!token) return init ?? {};
+  return { ...init, headers: { ...(init?.headers as Record<string, string> | undefined), Authorization: `Bearer ${token}` } };
+}
 
 export class ApiError extends Error {
   status: number;
@@ -26,7 +63,7 @@ export class ApiError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`${API_URL}${path}`, init);
+    response = await fetch(`${API_URL}${path}`, withAuth(init));
   } catch {
     throw new ApiError("Cannot reach the DataPilot server. Is the backend running?", 0, "network");
   }
@@ -54,6 +91,7 @@ const json = (body: unknown): RequestInit => ({
 export const setLlm = (id: string, body: { provider: string; api_key: string; model: string }) =>
   request<SessionState>(`/api/sessions/${id}/llm`, { ...json(body), method: "PUT" });
 export const clearLlm = (id: string) => request<SessionState>(`/api/sessions/${id}/llm`, { method: "DELETE" });
+export const getTranscript = (id: string) => request<TranscriptEntry[]>(`/api/sessions/${id}/transcript`);
 export const getConfig = () => request<AppConfig>("/api/config");
 export const createSession = () => request<{ session_id: string }>("/api/sessions", { method: "POST" });
 export const getSession = (id: string) => request<SessionState>(`/api/sessions/${id}`);
@@ -88,19 +126,22 @@ export async function streamChat(
 ): Promise<void> {
   let response: Response;
   try {
-    response = await fetch(`${API_URL}/api/sessions/${id}/chat`, { ...json({ message, dataset }), signal });
+    response = await fetch(`${API_URL}/api/sessions/${id}/chat`, withAuth({ ...json({ message, dataset }), signal }));
   } catch {
     if (signal.aborted) return;
     throw new ApiError("Cannot reach the DataPilot server. Is the backend running?", 0, "network");
   }
   if (!response.ok || !response.body) {
     let text = "The server could not start the analysis.";
+    let code = "chat";
     try {
-      text = (await response.json()).error?.message ?? text;
+      const body = await response.json();
+      text = body.error?.message ?? text;
+      code = body.error?.code ?? code;
     } catch {
       text = `The server returned status ${response.status}.`;
     }
-    throw new ApiError(text, response.status, "chat");
+    throw new ApiError(text, response.status, code);
   }
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
@@ -113,4 +154,62 @@ export async function streamChat(
     buffer = parsed.rest;
     parsed.events.forEach(onEvent);
   }
+}
+
+const patch = (body: unknown): RequestInit => ({ ...json(body), method: "PATCH" });
+
+export const register = (body: { email: string; password: string; name: string }) => request<AuthResponse>("/api/auth/register", json(body));
+export const login = (body: { email: string; password: string }) => request<AuthResponse>("/api/auth/login", json(body));
+export const logout = () => request<{ signed_out: boolean }>("/api/auth/logout", { method: "POST" });
+export const getMe = () => request<User>("/api/auth/me");
+
+export const listTeams = () => request<Team[]>("/api/teams");
+export const createTeam = (name: string) => request<Team>("/api/teams", json({ name }));
+export const listMembers = (teamId: string) => request<Member[]>(`/api/teams/${teamId}/members`);
+export const addMember = (teamId: string, email: string, role: string) => request<Member>(`/api/teams/${teamId}/members`, json({ email, role }));
+export const removeMember = (teamId: string, userId: string) => request<{ removed: boolean }>(`/api/teams/${teamId}/members/${userId}`, { method: "DELETE" });
+
+export const listWorkspaces = () => request<WorkspaceInfo[]>("/api/sessions");
+export const updateWorkspace = (id: string, body: { name?: string; team_id?: string | null }) => request<SessionState>(`/api/sessions/${id}`, patch(body));
+export const deleteWorkspace = (id: string) => request<{ deleted: boolean }>(`/api/sessions/${id}`, { method: "DELETE" });
+
+export const createShare = (id: string, title: string) => request<ShareLink>(`/api/sessions/${id}/shares`, json({ title }));
+export const listShares = (id: string) => request<ShareLink[]>(`/api/sessions/${id}/shares`);
+export const revokeShare = (id: string, token: string) => request<{ revoked: boolean }>(`/api/sessions/${id}/shares/${token}`, { method: "DELETE" });
+export const getShared = (token: string) => request<SharedSnapshot>(`/api/shared/${encodeURIComponent(token)}`);
+
+export const listSchedules = (id: string) => request<Schedule[]>(`/api/sessions/${id}/schedules`);
+export const createSchedule = (id: string, body: { name: string; sql: string; every_minutes: number; refresh_sources: boolean }) =>
+  request<Schedule>(`/api/sessions/${id}/schedules`, json(body));
+export const toggleSchedule = (id: string, scheduleId: string, enabled: boolean) =>
+  request<Schedule>(`/api/sessions/${id}/schedules/${scheduleId}`, patch({ enabled }));
+export const deleteSchedule = (id: string, scheduleId: string) =>
+  request<{ deleted: boolean }>(`/api/sessions/${id}/schedules/${scheduleId}`, { method: "DELETE" });
+export const getScheduleRuns = (id: string, scheduleId: string) => request<ScheduleRun[]>(`/api/sessions/${id}/schedules/${scheduleId}/runs`);
+export const runScheduleNow = (id: string, scheduleId: string) =>
+  request<{ run: ScheduleRun; schedule: Schedule }>(`/api/sessions/${id}/schedules/${scheduleId}/run`, { method: "POST" });
+
+export const importFromUrl = (id: string, url: string, name?: string) =>
+  request<{ job_id: string }>(`/api/sessions/${id}/connectors/url`, json({ url, name: name || null }));
+export const importSqlite = (id: string, file: File) => {
+  const form = new FormData();
+  form.append("file", file);
+  return request<{ job_id: string }>(`/api/sessions/${id}/connectors/sqlite`, { method: "POST", body: form });
+};
+export const listPostgresTables = (id: string, connection: PostgresConnection) =>
+  request<{ tables: string[] }>(`/api/sessions/${id}/connectors/postgres/tables`, json({ connection }));
+export const importPostgres = (id: string, connection: PostgresConnection, tables: string[]) =>
+  request<{ job_id: string }>(`/api/sessions/${id}/connectors/postgres`, json({ connection, tables }));
+export const refreshDataset = (id: string, name: string) =>
+  request<{ job_id: string }>(`/api/sessions/${id}/datasets/${encodeURIComponent(name)}/refresh`, { method: "POST" });
+export const getJob = (jobId: string) => request<JobStatus>(`/api/jobs/${jobId}`);
+
+export async function waitForJob(jobId: string, onUpdate?: (job: JobStatus) => void): Promise<JobStatus> {
+  for (let attempt = 0; attempt < 600; attempt++) {
+    const job = await getJob(jobId);
+    onUpdate?.(job);
+    if (job.status === "done" || job.status === "error") return job;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new ApiError("The import is taking too long. Check the dataset list later.", 0, "job_timeout");
 }

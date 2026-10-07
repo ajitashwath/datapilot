@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from app.agent.llm import LLMError, LLMProvider, Message, TextDelta, ToolResultMessage
 from app.agent.prompts import build_system_prompt, grounding_text
 from app.agent.tools import result_for_llm, run_tool, tool_specs
+from app.metrics import metrics
 from app.models import ToolResult
 from app.session import AnalysisRecord, Session
 
@@ -62,6 +63,18 @@ def number_from_match(match: re.Match) -> tuple[float, float]:
     return float(raw) * scale, 0.5 * 10 ** -decimals * scale + 1e-9
 
 
+def append_event(events: list[dict], event: Event) -> None:
+    data = event.model_dump(mode="json")
+    if isinstance(event, TextEvent) and events and events[-1]["type"] == "text" and events[-1]["step"] == event.step:
+        events[-1]["delta"] += event.delta
+        return
+    if isinstance(event, ToolResultEvent):
+        result = data["result"]
+        if result["table"] or result["chart"] or result["anomalies"]:
+            result["data"] = {}
+    events.append(data)
+
+
 def parse_numbers(text: str) -> list[tuple[float, float]]:
     return [number_from_match(m) for m in NUMBER_PATTERN.finditer(text)]
 
@@ -108,6 +121,17 @@ def preview_of(result: ToolResult) -> str:
     return ""
 
 
+def stream_step(llm: LLMProvider, system: str, messages: list[Message], specs: list, step: int) -> Iterator[Event]:
+    text, calls = "", []
+    for item in llm.stream(system, messages, specs):
+        if isinstance(item, TextDelta):
+            text += item.text
+            yield TextEvent(step=step, delta=item.text)
+        else:
+            calls.append(item.call)
+    return text, calls
+
+
 def run_turn(session: Session, question: str, llm: LLMProvider) -> Iterator[Event]:
     settings = session.store.settings
     started = time.perf_counter()
@@ -115,21 +139,18 @@ def run_turn(session: Session, question: str, llm: LLMProvider) -> Iterator[Even
     messages = trim_history(session.history, settings.history_turns) + [user_message]
     new_messages = [user_message]
     system = build_system_prompt(session)
-    specs = tool_specs()
+    specs = tool_specs(settings.sandbox_mode != "off")
     tools_used: list[str] = []
     tool_texts: list[str] = []
     preview = ""
     final_text = ""
 
     for step in range(settings.max_agent_steps):
-        text, calls = "", []
         try:
-            for item in llm.stream(system, messages, specs):
-                if isinstance(item, TextDelta):
-                    text += item.text
-                    yield TextEvent(step=step, delta=item.text)
-                else:
-                    calls.append(item.call)
+            text, calls = yield from stream_step(llm, system, messages, specs, step)
+            if not text.strip() and not calls and tools_used:
+                metrics.inc("datapilot_empty_reply_retries_total")
+                text, calls = yield from stream_step(llm, system, messages, [], step)
         except LLMError as exc:
             yield ErrorEvent(message=exc.message)
             return

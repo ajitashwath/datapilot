@@ -1,6 +1,7 @@
+import codecs
 import csv
 import re
-import uuid
+import shutil
 from pathlib import Path
 
 import duckdb
@@ -8,23 +9,37 @@ import duckdb
 from app.errors import UserError
 
 ALLOWED_EXTENSIONS = {".csv"}
+CHUNK_BYTES = 1024 * 1024
 
 
-def validate_upload(filename: str, content: bytes, max_mb: int) -> bytes:
+def validate_file(filename: str, path: Path, max_mb: int) -> None:
     suffix = Path(filename or "").suffix.lower()
     if suffix not in ALLOWED_EXTENSIONS:
         raise UserError(f"'{filename}' is not supported. Please upload a .csv file.", "unsupported_file", 415)
-    if len(content) > max_mb * 1024 * 1024:
+    if path.stat().st_size > max_mb * 1024 * 1024:
         raise UserError(f"'{filename}' is larger than the {max_mb} MB limit.", "file_too_large", 413)
-    if not content.strip():
+    with path.open("rb") as handle:
+        head = handle.read(65536)
+    if not head.strip():
         raise UserError(f"'{filename}' is empty.", "empty_file", 422)
-    if b"\x00" in content[:8192]:
+    if b"\x00" in head[:8192]:
         raise UserError(f"'{filename}' looks like a binary file, not a CSV.", "invalid_csv", 422)
+
+
+def ensure_utf8(path: Path) -> Path:
+    decoder = codecs.getincrementaldecoder("utf-8-sig")()
     try:
-        content.decode("utf-8-sig")
-        return content
+        with path.open("rb") as handle:
+            while chunk := handle.read(CHUNK_BYTES):
+                decoder.decode(chunk)
+        decoder.decode(b"", final=True)
+        return path
     except UnicodeDecodeError:
-        return content.decode("latin-1").encode("utf-8")
+        converted = path.with_name(path.stem + ".utf8.csv")
+        with path.open("r", encoding="latin-1", newline="") as source, converted.open("w", encoding="utf-8", newline="") as target:
+            shutil.copyfileobj(source, target)
+        path.unlink()
+        return converted
 
 
 def table_name_for(filename: str, existing: set[str]) -> str:
@@ -38,17 +53,11 @@ def table_name_for(filename: str, existing: set[str]) -> str:
     return name
 
 
-def save_upload(directory: Path, content: bytes) -> Path:
-    directory.mkdir(parents=True, exist_ok=True)
-    path = directory / f"{uuid.uuid4().hex}.csv"
-    path.write_bytes(content)
-    return path
-
-
 def detect_delimiter(path: Path) -> str:
-    sample = path.read_text(encoding="utf-8-sig", errors="replace")[:65536]
+    with path.open("r", encoding="utf-8-sig", errors="replace") as handle:
+        sample = handle.read(65536)
     try:
-        return csv.Sniffer().sniff(sample, delimiters=",;	|").delimiter
+        return csv.Sniffer().sniff(sample, delimiters=",;\t|").delimiter
     except csv.Error:
         return ","
 

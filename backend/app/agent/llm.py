@@ -7,6 +7,7 @@ from pydantic import BaseModel, SecretStr
 
 from app.config import Settings
 from app.logging_setup import log_event
+from app.metrics import metrics
 
 PROVIDER_DEFAULTS = {
     "anthropic": {"label": "Anthropic", "model": "claude-sonnet-5-5", "base_url": None},
@@ -34,6 +35,7 @@ class ToolCall(BaseModel):
     id: str
     name: str
     input: dict[str, Any]
+    extra: dict[str, Any] | None = None
 
 
 class ToolResultMessage(BaseModel):
@@ -110,6 +112,9 @@ class AnthropicProvider(LLMProvider):
         except self.anthropic.APIError as exc:
             log_event("llm_api_error", provider="anthropic", error=str(exc)[:300])
             raise LLMError("The LLM provider returned an error. Please try again.") from exc
+        elapsed = time.perf_counter() - started
+        metrics.inc("datapilot_llm_requests_total", provider="anthropic")
+        metrics.inc("datapilot_llm_seconds_sum", elapsed, provider="anthropic")
         log_event(
             "llm_request", provider="anthropic", model=self.model, duration_ms=round((time.perf_counter() - started) * 1000, 1),
             input_tokens=final.usage.input_tokens, output_tokens=final.usage.output_tokens, stop_reason=final.stop_reason,
@@ -149,25 +154,31 @@ class OpenAICompatibleProvider(LLMProvider):
         self.openai = openai
         self.provider = config.provider
         self.label = defaults["label"]
-        self.client = openai.OpenAI(api_key=config.api_key.get_secret_value(), base_url=defaults["base_url"], max_retries=1, timeout=90)
+        self.client = openai.OpenAI(api_key=config.api_key.get_secret_value(), base_url=defaults["base_url"], max_retries=4, timeout=90)
         self.model = config.resolved_model()
         self.max_tokens = max_tokens
 
     def convert(self, system: str, messages: list[Message]) -> list[dict]:
         converted: list[dict] = [{"role": "system", "content": system}]
+        names: dict[str, str] = {}
         for m in messages:
             if m.role == "user":
                 converted.append({"role": "user", "content": m.text})
             elif m.role == "assistant":
                 entry: dict = {"role": "assistant", "content": m.text or None}
+                names.update({c.id: c.name for c in m.tool_calls})
                 if m.tool_calls:
                     entry["tool_calls"] = [
-                        {"id": c.id, "type": "function", "function": {"name": c.name, "arguments": json.dumps(c.input)}}
+                        {"id": c.id, "type": "function", "function": {"name": c.name, "arguments": json.dumps(c.input)}, **({"extra_content": c.extra} if c.extra else {})}
                         for c in m.tool_calls
                     ]
                 converted.append(entry)
             else:
-                converted += [{"role": "tool", "tool_call_id": r.call_id, "content": r.content} for r in m.tool_results]
+                for r in m.tool_results:
+                    reply = {"role": "tool", "tool_call_id": r.call_id, "content": r.content}
+                    if self.provider == "gemini":
+                        reply["name"] = names.get(r.call_id, "")
+                    converted.append(reply)
         return converted
 
     def request_options(self) -> dict:
@@ -212,15 +223,19 @@ class OpenAICompatibleProvider(LLMProvider):
                     index = part.index or 0
                     slot = by_index.get(index)
                     if slot is None or (part.id and slot["id"] and part.id != slot["id"]):
-                        slot = {"id": "", "name": "", "arguments": ""}
+                        slot = {"id": "", "name": "", "arguments": "", "extra": None}
                         slots.append(slot)
                         by_index[index] = slot
                     slot["id"] = part.id or slot["id"]
+                    slot["extra"] = (part.model_extra or {}).get("extra_content") or slot["extra"]
                     if part.function:
                         slot["name"] += part.function.name or ""
                         slot["arguments"] += part.function.arguments or ""
         except self.openai.OpenAIError as exc:
             raise self.translate_error(exc) from exc
+        elapsed = time.perf_counter() - started
+        metrics.inc("datapilot_llm_requests_total", provider=self.provider)
+        metrics.inc("datapilot_llm_seconds_sum", elapsed, provider=self.provider)
         log_event(
             "llm_request", provider=self.provider, model=self.model, duration_ms=round((time.perf_counter() - started) * 1000, 1),
             input_tokens=getattr(usage, "prompt_tokens", None), output_tokens=getattr(usage, "completion_tokens", None),
@@ -230,7 +245,9 @@ class OpenAICompatibleProvider(LLMProvider):
                 arguments = json.loads(slot["arguments"] or "{}")
             except json.JSONDecodeError:
                 arguments = {}
-            yield ToolUse(call=ToolCall(id=slot["id"] or f"call_{n}", name=slot["name"], input=arguments if isinstance(arguments, dict) else {}))
+            yield ToolUse(call=ToolCall(
+                id=slot["id"] or f"call_{n}", name=slot["name"], input=arguments if isinstance(arguments, dict) else {}, extra=slot["extra"],
+            ))
 
 
 def server_config(settings: Settings) -> LLMConfig | None:

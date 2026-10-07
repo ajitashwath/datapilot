@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import AssistantMessage from "./AssistantMessage";
-import { ApiError, getOverview, streamChat } from "@/lib/api";
-import { applyEvent, newAssistantMessage } from "@/lib/chatState";
+import ShareDialog from "./ShareDialog";
+import { ApiError, getOverview, getTranscript, streamChat } from "@/lib/api";
+import { applyEvent, messagesFromTranscript, newAssistantMessage } from "@/lib/chatState";
+import { buildReport, downloadText } from "@/lib/export";
 import type { AppConfig, ChatMessage } from "@/lib/types";
 
 interface ChatProps {
@@ -12,6 +14,9 @@ interface ChatProps {
   datasetCount: number;
   config: AppConfig | null;
   llmReady: boolean;
+  role: string;
+  workspaceName: string;
+  onSchedule: (sql: string) => void;
   resetSignal: number;
   onTurnFinished: () => void;
   onLoadSamples: () => void;
@@ -27,19 +32,22 @@ const CAPABILITIES = [
 let counter = 0;
 const nextId = () => `m${Date.now()}-${counter++}`;
 
-export default function Chat({ sessionId, dataset, datasetCount, config, llmReady, resetSignal, onTurnFinished, onLoadSamples }: ChatProps) {
+export default function Chat({ sessionId, dataset, datasetCount, config, llmReady, role, workspaceName, onSchedule, resetSignal, onTurnFinished, onLoadSamples }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [sharing, setSharing] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     abortRef.current?.abort();
-    setMessages([]);
     setBusy(false);
-  }, [resetSignal]);
+    getTranscript(sessionId)
+      .then((entries) => setMessages(messagesFromTranscript(entries)))
+      .catch(() => setMessages([]));
+  }, [sessionId, resetSignal]);
 
   useEffect(() => {
     setSuggestions([]);
@@ -91,12 +99,28 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
     [messages, send],
   );
 
-  const blocked = datasetCount === 0 || !llmReady;
+  const canEdit = role !== "reader";
+  const blocked = datasetCount === 0 || !llmReady || !canEdit;
 
   return (
     <div className="flex h-full flex-col">
       <div className="scroll-thin flex-1 overflow-y-auto px-4 py-6 sm:px-8">
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="mx-auto max-w-3xl space-y-6" role="log" aria-label="Conversation" aria-live="polite">
+          {messages.length > 0 && !busy && (
+            <div className="flex justify-end gap-2">
+              {role === "owner" && (
+                <button onClick={() => setSharing(true)} className="rounded-lg px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-white">
+                  Share
+                </button>
+              )}
+              <button
+                onClick={() => downloadText("datapilot-report.md", buildReport(messages, dataset ? `Analysis of ${dataset}` : "Analysis report"), "text/markdown")}
+                className="rounded-lg px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-white"
+              >
+                Export report
+              </button>
+            </div>
+          )}
           {messages.length === 0 && (
             <div className="pt-6">
               {datasetCount === 0 ? (
@@ -147,7 +171,7 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
                 <div className="max-w-[85%] rounded-2xl rounded-tr-md bg-brand-600 px-4 py-2.5 text-[15px] text-white shadow-card">{m.text}</div>
               </div>
             ) : (
-              <AssistantMessage key={m.id} message={m} onRetry={() => retry(i)} />
+              <AssistantMessage key={m.id} message={m} onRetry={() => retry(i)} onSchedule={canEdit ? onSchedule : undefined} />
             ),
           )}
           <div ref={bottomRef} />
@@ -156,7 +180,10 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
 
       <div className="border-t border-slate-200 bg-white/80 px-4 py-4 backdrop-blur sm:px-8">
         <div className="mx-auto max-w-3xl">
-          {config && !llmReady && (
+          {!canEdit && (
+            <p className="mb-2 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-700">You have read-only access to this workspace, so asking new questions is disabled.</p>
+          )}
+          {config && !llmReady && canEdit && (
             <p className="mb-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 ring-1 ring-amber-200">
               No LLM API key yet. Open Settings and add a Gemini or OpenAI API key to ask questions.
             </p>
@@ -169,6 +196,7 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
             className="flex items-end gap-2 rounded-2xl border border-slate-300 bg-white p-2 shadow-card focus-within:border-brand-500"
           >
             <textarea
+              aria-label="Ask a question about your data"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -180,8 +208,8 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
               rows={1}
               maxLength={2000}
               disabled={blocked}
-              placeholder={datasetCount === 0 ? "Upload a CSV to start asking questions" : "Ask a question about your data"}
-              className="max-h-40 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-[15px] outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
+              placeholder={!canEdit ? "Read-only workspace" : datasetCount === 0 ? "Upload a CSV to start asking questions" : "Ask a question about your data"}
+              className="max-h-40 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-[15px] outline-none placeholder:text-slate-500 disabled:cursor-not-allowed"
             />
             {busy ? (
               <button type="button" onClick={() => abortRef.current?.abort()} className="rounded-xl bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
@@ -193,9 +221,10 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
               </button>
             )}
           </form>
-          <p className="mt-2 text-center text-xs text-slate-400">Numbers come from executed queries. Check the SQL or code under each answer.</p>
+          <p className="mt-2 text-center text-xs text-slate-500">Numbers come from executed queries. Check the SQL or code under each answer.</p>
         </div>
       </div>
+      {sharing && <ShareDialog sessionId={sessionId} defaultTitle={workspaceName} onClose={() => setSharing(false)} />}
     </div>
   );
 }

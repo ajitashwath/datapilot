@@ -8,6 +8,7 @@ services:
       CORS_ORIGINS: http://localhost:3000
     volumes:
       - ./data:/data:ro
+      - datapilot-data:/var/lib/datapilot
     ports:
       - "8000:8000"
     read_only: true
@@ -17,6 +18,9 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: 3g
+    restart: unless-stopped
 
   frontend:
     build:
@@ -24,6 +28,11 @@ services:
       args:
         NEXT_PUBLIC_API_URL: http://localhost:8000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "3000:3000"
+    restart: unless-stopped
+
+volumes:
+  datapilot-data:

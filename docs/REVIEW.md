@@ -1,45 +1,72 @@
 # Requirements review
 
-A strict self-review of DataPilot against the assignment. Status values: **Done** (implemented and exercised by tests or a manual run), **Partial** (implemented, but a part could not be verified in the build environment).
+A strict self-review of DataPilot. Status values: **Done** (implemented and exercised by tests or a manual run), **Partial** (implemented, but part of it could not be verified in the build environment).
+
+## Assignment requirements
 
 | Requirement | Implementation | Status | Evidence |
 | --- | --- | --- | --- |
-| CSV upload, multiple files | Multipart upload, per-file results, drag and drop | Done | `api/routes.py`, `Sidebar.tsx`, `test_api.py::test_upload_multiple_files...` |
-| Upload validation, malformed CSV | Extension, size, binary, empty, encoding, delimiter detection, rejected-row recovery | Done | `data/loader.py`, `test_data_layer.py::TestCsvValidation` |
+| CSV upload, multiple files | Streamed multipart upload, per-file results, drag and drop | Done | `api/routes.py`, `Sidebar.tsx`, `test_persistence.py::test_uploads_are_streamed...` |
+| Upload validation, malformed CSV | Extension, size, binary, empty, encoding, delimiter detection, rejected-row recovery | Done | `data/loader.py`, `TestCsvValidation` |
 | Schema, types, missing, duplicates, cardinality, kinds | DuckDB based profiler | Done | `data/profiler.py`, `TestSchemaInference` |
-| Preview and compact quality summary | Preview table, schema table, score badge | Done | `DataExplorer.tsx`, `Sidebar.tsx` |
-| Natural language analysis executed on data | Tool loop over DuckDB and pandas | Done | `agent/agent.py`, `test_agent.py::TestToolRouting`, evaluation tools mode |
-| No invented numbers | Prompt rules plus grounding check that flags unseen figures | Done | `find_ungrounded_numbers`, `TestHallucinationResistance` |
-| LLM tool calling with the listed tools | 10 required tools plus `set_context_filters` | Done | `agent/tools.py`, `test_agent.py::test_tools_have_valid_json_schemas` |
-| Safe Python execution | AST policy, isolated subprocess, timeout, limits, structured result | Partial (limits untested on Linux) | `data/sandbox.py`, `data/sandbox_runner.py`, `TestPythonSandbox` |
+| Natural language analysis executed on data | Tool loop over DuckDB and pandas | Done | `agent/agent.py`, `TestToolRouting`, evaluation |
+| No invented numbers | Prompt rules plus grounding check against tool output and schema | Done | `find_ungrounded_numbers`, `TestHallucinationResistance` |
+| LLM tool calling with the listed tools | 10 required tools plus `set_context_filters` | Done | `agent/tools.py` |
+| Safe Python execution | AST policy, module-refusing wrappers, subprocess, timeout, rlimits and Windows job object, off switch | Done (not a hardened jail) | `data/sandbox.py`, `data/sandbox_runner.py`, `TestPythonSandbox`, `test_python_switch.py` |
 | SQL generation and execution on DuckDB | Parse tree validator, single SELECT, timeout, row cap | Done | `data/engine.py`, `TestSqlExecution` |
-| Shows SQL, result and explanation | Expandable SQL and code blocks, result table, answer text | Done | `AssistantMessage.tsx` |
-| Charts: bar, line, pie, scatter, histogram | Built from executed query results, labelled axes, legends | Done | `data/charts.py`, `ChartView.tsx`, `TestVisualizationData` |
-| Anomaly detection with explanation | IQR, z-score, rolling median time series, computed reasons | Done | `data/anomalies.py`, `test_anomalies.py` |
-| Conversation context | History, analysis records and focus filters injected each turn | Done | `agent/prompts.py`, `TestConversationContext` |
-| Multi-file analysis | Join inference, manual relationships, `compare_datasets` | Done | `data/relations.py`, `TestRelationships` |
-| Data quality analysis and UI | Eight check types, score, issue list | Done | `data/quality.py`, `QualityPanel.tsx`, `TestDataQuality` |
-| Dashboard and summary | Metrics, distributions, categories, missing data, suggested questions | Done | `data/overview.py`, `DataExplorer.tsx` |
-| Streaming | SSE with text, tool call and tool result events | Done | `api/routes.py::event_stream`, `lib/api.ts`, `test_chat_streams_events_in_order` |
-| Error handling | Typed user errors, sanitised 500s, tool and LLM failure paths | Done | `errors.py`, `main.py`, `TestFailureHandling`, `test_api.py` |
-| Observability | JSON logs with request ID, session ID, tool and query timings, LLM latency | Done | `logging_setup.py`, `test_request_id_header_and_structured_logs` |
-| Evaluation suite | 18 cases with pandas ground truth and 4 grounding checks, two modes | Partial (live mode needs an API key) | `evaluation/`, `tests/test_evaluation.py` |
-| Tests | 127 backend tests, 4 frontend tests, all runnable offline | Done | `tests/`, `frontend/src/lib/sse.test.ts` |
-| Docker | Dockerfiles and compose with a hardened backend container | Partial (compose validated, images not built) | `docker-compose.yml`, `backend/Dockerfile`, `frontend/Dockerfile` |
-| README and architecture diagram | Mermaid diagram and all requested sections | Done | `README.md` |
-| Sample data | Customers, products and orders with planted patterns and anomalies | Done | `data/` |
-| Polished UI | Dashboard layout, tool timeline, charts, empty and error states | Done | `frontend/src`, `docs/screenshots` |
+| Charts, anomalies, quality, overview, multi-file, context | See the feature list in the README | Done | `tests/`, `frontend/src` |
+| Streaming | SSE with text, tool call and tool result events | Done | `api/routes.py::event_stream` |
+| Error handling, observability | Typed user errors, sanitised 500s, JSON logs, Prometheus metrics | Done | `errors.py`, `main.py`, `metrics.py` |
+| Evaluation suite | 18 cases with pandas ground truth plus 4 grounding checks, two modes | Partial (live run incomplete, see below) | `evaluation/` |
+| Tests | 253 backend (13 of them need a real Postgres and are skipped without one), 16 frontend, runnable offline, green on Windows and Linux | Done | `tests/`, `frontend/src/lib/*.test.ts` |
+| Docker | Dockerfiles, compose with volume and limits, CI build job | Partial (images never built here) | `docker-compose.yml`, `.github/workflows/ci.yml` |
+| README, diagram, sample data, polished UI | Complete | Done | `README.md`, `data/`, `docs/screenshots` |
 
-## Weakest points found and what was done
+## Productionisation work
 
-1. **Skewed distributions made the overview histograms useless.** One huge order stretched every bin. Fixed by clipping overview histograms to the 1st to 99th percentile and saying how many values are hidden.
-2. **Silent mis-parsing of ragged CSVs.** DuckDB's sniffer accepted a file with inconsistent rows as a single column. Fixed by detecting the delimiter first and falling back to row rejection with a reported count.
-3. **Noisy join inference.** Matching column names such as `region` produced many-to-many "relationships". Fixed by requiring a key like side and ignoring many-to-many matches.
-4. **Time series flagged partial periods.** The last partial week looked like a collapse. Edge periods are now excluded and the explanation says so.
-5. **Empty model replies and prompt injection through cell text.** An empty reply would have poisoned the history; it is now replaced with a message. Cell values are truncated in the prompt and flagged as untrusted.
+| Area | What was done | Status | Evidence |
+| --- | --- | --- | --- |
+| Sandbox isolation | Runtime module guard (closed a real `pd.compat.os` escape), `__import__` handling, Windows job object memory limit, Linux rlimits, `SANDBOX_MODE=off` | Done | `test_data_layer.py` sandbox tests, run on Windows and Ubuntu (WSL) |
+| Authentication | Optional bearer token, constant time compare, login screen | Done (shared token, not per-user) | `api/security.py`, `test_security.py`, browser run |
+| Rate limits and quotas | Per IP sliding windows for chat, upload, session creation; shared key question quota | Done | `limits.py`, `test_security.py` |
+| API key handling | Fernet in memory, never returned, never logged, never persisted | Done | `secrets_box.py`, `test_persistence.py::test_api_keys_are_never_written_to_disk` |
+| Persistence | Per-session DuckDB file, metadata, transcript, restore on start, expiry cleanup | Done | `test_persistence.py`, real restart in the browser |
+| Large files | Streaming upload, streaming re-encoding, DuckDB disk spilling | Done | `loader.py`, 400k row stress run |
+| Live verification | Gemini run on 18 cases across three models: 16 passed, 1 failing by interpretation, 1 answered correctly with a widened check | Partial | README, Known limitations |
+| Export and saved analyses | CSV export, Markdown report export, saved transcript restored on reload, chart type switch | Done | `export.test.ts`, browser run |
+| Accounts and teams | `AUTH_MODE=accounts`: scrypt passwords, hashed tokens, throttled sign-in, private workspaces (404 not 403), teams with admin, member and viewer roles, read-only enforcement | Done (no email verification, SSO or password reset) | `accounts.py`, `api/deps.py`, `test_accounts.py`, two-user browser run |
+| Shareable analyses | Immutable public snapshot links with revoke, noindex, rate limit, public read-only page | Done (snapshots, not live dashboards) | `sharing.py`, `app/share/[token]`, `test_sharing_schedules.py`, signed-out browser run |
+| Scheduling | Saved SQL on an interval, run now, pause, history, optional refresh of linked data, scheduler thread, expiry exemption | Done (SQL only, no notifications) | `schedules.py`, `test_sharing_schedules.py`, browser run |
+| Connectors | CSV link and Google Sheets with refresh, SQLite file, Postgres, SSRF protection with DNS pinning and redirect checks | Done (Postgres integration-tested on a real server, TLS success path untested) | `connectors.py`, `test_connectors.py`, `test_postgres_integration.py`, browser run |
+| Job queue | In-process job runner with status polling, used for imports and refreshes | Done (single node) | `jobs.py`, `connector_routes.py` |
+| Responsive and accessible UI | Phone layout with drawer, keyboard focus, labels, live regions; axe-core (WCAG 2.1 A and AA) reports no violations on chat, all explorer tabs and settings at phone and desktop widths | Done | browser audits |
+| Metrics and alerting | `/api/metrics` counters, example alert rules | Done (no alert manager bundled) | `metrics.py`, `docs/DEPLOY.md` |
+| CI | GitHub Actions: backend tests and evaluation, frontend typecheck, tests and build, dependency audits, Docker build and health check | Partial (workflow not executed here; each command was run locally) | `.github/workflows/ci.yml` |
+| Dependency pinning and scanning | `requirements.lock`, `pip-audit` clean, `npm audit --omit=dev` clean; vulnerable starlette, python-multipart, cryptography, anyio, idna, python-dotenv and next/postcss upgraded | Done | `backend/requirements.lock` |
+| Deploy setup | Hardened compose file, volume, health checks, deployment guide | Done | `docs/DEPLOY.md` |
+
+## Bugs found by running real models
+
+- Gemini 3 models reject tool conversations unless the opaque `thought_signature` returned with each tool call is sent back. The provider now captures and echoes provider-specific tool call data.
+- `gemini-2.5-flash-lite` answers with nothing after a tool result when several tools are declared. The agent now asks once more without tools when a model goes silent after running tools, for any provider.
+- The model ranked customers by a non-unique name column and merged different customers. The schema now shows distinct counts and a rule says to group by identifiers.
+- The model computed percentages itself. The rule against model arithmetic now names percentages, ratios and growth rates explicitly.
+- Comparison questions were answered without a chart. The chart rule was tightened and now passes live.
+
+## Bugs found while building the new features
+
+- Join detection crashed with a server error when two datasets were named like internal SQL aliases (for example `a.csv` and `b.csv`). Fixed with derived tables and a regression test.
+- Percent-encoded file names in links (`Sales%20Q3.csv`) produced table names like `sales_20q3`. Fixed.
+- The Postgres table listing query used `NOT IN %s` with a tuple, which is invalid in psycopg 3. The fake driver could not catch this; a real server did. Fixed.
+- A `<button>` nested inside a `<summary>` failed the axe nested-interactive rule. Moved out of the summary.
+- The remembered workspace was shared between users of one browser. It is now stored per user.
+- The lock file omitted `psycopg-binary`, which would have broken Postgres in the slim Docker image. The lock generator now honours extras.
 
 ## Still open
 
-- Run `python evaluation/run_eval.py --mode live` with a real key and tune prompts from the failures.
-- Build and run the Docker images.
-- Exercise the Linux sandbox limits and consider a network namespace or a dedicated sandbox container for stronger isolation.
+- Build and run the Docker images, and run the CI workflow on GitHub.
+- Re-run the whole live evaluation on one model with a paid key, so every case runs on the final prompt, and re-check `underperforming_products`.
+- Run OpenAI and Anthropic live, and test the Postgres connector over TLS.
+- Move `execute_python` into a network-less sandbox container if it must stay enabled for untrusted users.
+- Email verification, password reset and SSO if accounts are exposed beyond a trusted group; notifications for scheduled queries.
+- A shared database and external job workers if this ever needs more than one node.

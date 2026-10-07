@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { downloadText, tableToCsv } from "@/lib/export";
 import { formatCell } from "@/lib/format";
 import type { TableResult } from "@/lib/types";
 
@@ -9,8 +10,9 @@ export default function ResultTable({ table, pageSize = 10 }: { table: TableResu
   const rows = expanded ? table.rows : table.rows.slice(0, pageSize);
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-      <div className="scroll-thin max-h-96 overflow-auto">
+      <div tabIndex={0} role="region" aria-label="Result rows" className="scroll-thin max-h-96 overflow-auto">
         <table className="w-full text-left text-sm">
+          <caption className="sr-only">Query result</caption>
           <thead className="sticky top-0 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
             <tr>
               {table.columns.map((c) => (
@@ -38,6 +40,9 @@ export default function ResultTable({ table, pageSize = 10 }: { table: TableResu
           {table.row_count} row{table.row_count === 1 ? "" : "s"}
           {table.truncated ? " (result limit reached)" : ""}
         </span>
+        <button onClick={() => downloadText("result.csv", tableToCsv(table), "text/csv")} className="font-medium text-slate-600 hover:text-brand-600 hover:underline">
+          Export CSV
+        </button>
         {table.rows.length > pageSize && (
           <button onClick={() => setExpanded(!expanded)} className="font-medium text-brand-600 hover:underline">
             {expanded ? "Show fewer" : `Show all ${table.rows.length}`}

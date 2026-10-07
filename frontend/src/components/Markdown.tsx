@@ -34,7 +34,7 @@ function splitCells(line: string): string[] {
 function renderTable(lines: string[], key: number): ReactNode {
   const [header, , ...body] = lines;
   return (
-    <div key={key} className="my-2 overflow-x-auto rounded-lg border border-slate-200">
+    <div key={key} tabIndex={0} role="region" aria-label="Table" className="my-2 overflow-x-auto rounded-lg border border-slate-200">
       <table className="w-full text-left text-sm">
         <thead className="bg-slate-50 text-xs uppercase text-slate-500">
           <tr>

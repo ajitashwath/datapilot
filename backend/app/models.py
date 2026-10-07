@@ -35,6 +35,7 @@ class DatasetProfile(BaseModel):
     column_count: int
     duplicate_rows: int
     skipped_rows: int = 0
+    source: str | None = None
     columns: list[ColumnProfile]
 
 

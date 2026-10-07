@@ -33,3 +33,19 @@ export function applyEvent(message: ChatMessage, event: StreamEvent): ChatMessag
       return { ...message, status: "error", error: event.message };
   }
 }
+
+export function finalText(message: ChatMessage): string {
+  const lastTool = message.steps.map((s) => s.kind).lastIndexOf("tool");
+  return message.steps
+    .slice(lastTool + 1)
+    .flatMap((s) => (s.kind === "text" ? [s.text] : []))
+    .join("\n\n");
+}
+
+export function messagesFromTranscript(entries: { question: string; events: StreamEvent[] }[]): ChatMessage[] {
+  return entries.flatMap((entry, index) => {
+    const user: ChatMessage = { id: `t${index}-q`, role: "user", text: entry.question, steps: [], status: "done", warnings: [] };
+    const assistant = entry.events.reduce(applyEvent, newAssistantMessage(`t${index}-a`));
+    return [user, assistant.status === "streaming" ? { ...assistant, status: "done" as const } : assistant];
+  });
+}
