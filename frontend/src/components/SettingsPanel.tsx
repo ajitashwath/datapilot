@@ -45,7 +45,7 @@ function ProviderForm({ config, llm, onSave, onClear }: { config: AppConfig | nu
 
   return (
     <div>
-      <h3 className="mb-2 text-sm font-semibold text-slate-900">AI provider</h3>
+      <h2 className="mb-2 text-sm font-semibold text-slate-900">AI provider</h2>
       {llm ? (
         <div className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800 ring-1 ring-emerald-200">
           <p className="font-medium">
@@ -62,7 +62,7 @@ function ProviderForm({ config, llm, onSave, onClear }: { config: AppConfig | nu
         </p>
       )}
       <form onSubmit={submit} className="mt-2 space-y-2">
-        <select value={provider} onChange={(e) => setProvider(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm">
+        <select aria-label="AI provider" value={provider} onChange={(e) => setProvider(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm">
           {PROVIDERS.map((p) => (
             <option key={p.id} value={p.id}>
               {p.label}
@@ -71,6 +71,7 @@ function ProviderForm({ config, llm, onSave, onClear }: { config: AppConfig | nu
         </select>
         <input
           type="password"
+          aria-label="API key"
           autoComplete="off"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
@@ -78,6 +79,7 @@ function ProviderForm({ config, llm, onSave, onClear }: { config: AppConfig | nu
           className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm outline-none focus:border-brand-500"
         />
         <input
+          aria-label="Model name"
           value={model}
           onChange={(e) => setModel(e.target.value)}
           placeholder={`Model (default ${config?.default_models[provider] ?? ""})`}
@@ -86,7 +88,7 @@ function ProviderForm({ config, llm, onSave, onClear }: { config: AppConfig | nu
         <button type="submit" disabled={saving || apiKey.trim().length < 8} className="w-full rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-40">
           {saving ? "Saving..." : "Save key"}
         </button>
-        <p className="text-xs text-slate-400">The key is sent to the server once, kept in memory for this session only and never shown again.</p>
+        <p className="text-xs text-slate-500">The key is sent to the server once, kept in memory for this session only and never shown again.</p>
       </form>
     </div>
   );
@@ -117,7 +119,7 @@ export default function SettingsPanel({ config, sessionId, llm, onSaveLlm, onCle
         <div className="absolute right-0 z-20 mt-2 max-h-[80vh] w-80 space-y-4 overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
           <ProviderForm config={config} llm={llm} onSave={onSaveLlm} onClear={onClearLlm} />
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-slate-900">Server limits</h3>
+            <h2 className="mb-2 text-sm font-semibold text-slate-900">Server limits</h2>
             {config ? (
               <dl className="space-y-2">
                 <Row label="Upload limit" value={`${config.max_upload_mb} MB per file`} />
@@ -130,7 +132,7 @@ export default function SettingsPanel({ config, sessionId, llm, onSaveLlm, onCle
               <p className="text-sm text-slate-500">Server not reachable.</p>
             )}
           </div>
-          {sessionId && <p className="truncate text-xs text-slate-400">Session {sessionId}</p>}
+          {sessionId && <p className="truncate text-xs text-slate-500">Session {sessionId}</p>}
           <div className="flex gap-2">
             <button
               onClick={() => {

@@ -5,6 +5,7 @@ import Chat from "@/components/Chat";
 import DataExplorer from "@/components/DataExplorer";
 import SettingsPanel from "@/components/SettingsPanel";
 import Sidebar from "@/components/Sidebar";
+import TokenGate from "@/components/TokenGate";
 import {
   ApiError,
   addRelationship,
@@ -14,9 +15,11 @@ import {
   deleteDataset,
   getConfig,
   getSession,
+  getToken,
   loadSamples,
   resetConversation,
   setLlm,
+  setToken,
   uploadFiles,
 } from "@/lib/api";
 import type { AppConfig, DatasetDetail, SessionState, UploadResponse } from "@/lib/types";
@@ -55,6 +58,8 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState<{ kind: "error" | "info"; text: string } | null>(null);
   const [resetSignal, setResetSignal] = useState(0);
+  const [login, setLogin] = useState<{ needed: boolean; message: string | null }>({ needed: false, message: null });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const startSession = useCallback(async () => {
     const created = await createSession();
@@ -67,6 +72,12 @@ export default function Home() {
 
   const fail = useCallback(
     (error: unknown) => {
+      if (error instanceof ApiError && error.code === "unauthorized") {
+        const hadToken = getToken() !== null;
+        setToken(null);
+        setLogin({ needed: true, message: hadToken ? "That token was not accepted." : null });
+        return;
+      }
       if (error instanceof ApiError && error.code === "session_not_found") {
         setNotice({ kind: "info", text: "Your session expired, so a new one was started. Please upload your files again." });
         startSession().catch(() => setNotice({ kind: "error", text: "Could not start a new session." }));
@@ -77,25 +88,34 @@ export default function Home() {
     [startSession],
   );
 
-  useEffect(() => {
-    getConfig().then(setConfig).catch(fail);
-    async function boot() {
-      const stored = readStoredSession();
-      if (stored) {
-        try {
-          const existing = await getSession(stored);
-          setSessionId(stored);
-          setState(existing);
-          setSelected(largestDataset(existing.datasets));
-          return;
-        } catch (error) {
-          if (!(error instanceof ApiError) || error.status !== 404) throw error;
-        }
+  const boot = useCallback(async () => {
+    const stored = readStoredSession();
+    if (stored) {
+      try {
+        const existing = await getSession(stored);
+        setSessionId(stored);
+        setState(existing);
+        setSelected(largestDataset(existing.datasets));
+        return;
+      } catch (error) {
+        if (!(error instanceof ApiError) || error.status !== 404) throw error;
       }
-      await startSession();
     }
-    boot().catch(fail);
-  }, [fail, startSession]);
+    await startSession();
+  }, [startSession]);
+
+  useEffect(() => {
+    getConfig()
+      .then((cfg) => {
+        setConfig(cfg);
+        if (cfg.auth_required && !getToken()) {
+          setLogin({ needed: true, message: null });
+          return;
+        }
+        boot().catch(fail);
+      })
+      .catch(fail);
+  }, [boot, fail]);
 
   const refresh = useCallback(async () => {
     if (!sessionId) return;
@@ -208,25 +228,41 @@ export default function Home() {
     }
   }
 
+  function handleToken(token: string) {
+    setToken(token);
+    setLogin({ needed: false, message: null });
+    boot().catch(fail);
+  }
+
   const selectedProfile = state?.datasets.find((d) => d.profile.name === selected)?.profile ?? null;
+
+  if (login.needed) return <TokenGate message={login.message} onSubmit={handleToken} />;
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-3">
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 sm:px-5 sm:py-3">
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open datasets panel"
+            className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 ring-1 ring-slate-200 md:hidden"
+          >
+            Datasets
+          </button>
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-violet-500 text-sm font-bold text-white">DP</div>
           <div>
             <h1 className="text-base font-semibold leading-tight text-slate-900">DataPilot</h1>
-            <p className="text-xs text-slate-500">AI data analyst with verified computations</p>
+            <p className="hidden text-xs text-slate-500 sm:block">AI data analyst with verified computations</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <nav className="flex rounded-lg bg-slate-100 p-1">
+          <nav aria-label="View" className="flex rounded-lg bg-slate-100 p-1">
             {(["analyst", "data"] as View[]).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`rounded-md px-3 py-1 text-sm font-medium transition ${view === v ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                aria-pressed={view === v}
+                className={`rounded-md px-3 py-1 text-sm font-medium transition ${view === v ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
               >
                 {v === "analyst" ? "Analyst" : "Data explorer"}
               </button>
@@ -254,12 +290,16 @@ export default function Home() {
       )}
 
       <div className="flex min-h-0 flex-1">
+        <div className={sidebarOpen ? "fixed inset-0 z-30 flex" : "hidden md:flex"}>
         <Sidebar
           state={state}
           config={config}
           selected={selected}
           uploading={uploading}
-          onSelect={setSelected}
+          onSelect={(name) => {
+            setSelected(name);
+            setSidebarOpen(false);
+          }}
           onUpload={handleUpload}
           onRemove={handleRemove}
           onLoadSamples={handleSamples}
@@ -274,6 +314,8 @@ export default function Home() {
           }}
           onClearFilters={handleClearFilters}
         />
+        {sidebarOpen && <button aria-label="Close datasets panel" onClick={() => setSidebarOpen(false)} className="flex-1 bg-slate-900/40 md:hidden" />}
+        </div>
         <main className="min-w-0 flex-1">
           {sessionId && (
             <div className={view === "analyst" ? "h-full" : "hidden"}>

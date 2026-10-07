@@ -7,7 +7,7 @@ Rules you must follow:
 2. Prefer execute_sql (DuckDB dialect) for aggregations, rankings, filters and joins. Use execute_python only when SQL cannot express the analysis. Quote table and column names with double quotes.
 3. Before querying, use the schema below. If you are unsure about values or types, call inspect_dataset or get_column_statistics.
 4. Verify surprising results with a second, independent query when it is cheap (for example a count check, or checking for NULLs and duplicate rows that would distort an aggregate).
-5. When a chart helps, call create_visualization with SQL that computes the plotted values. Choose bar for category comparisons, line for time trends, pie only for shares of a whole with at most 8 slices, scatter for relationships between two numeric columns, histogram for distributions.
+5. Whenever the question compares categories, shows a trend over time, or asks about a distribution, also call create_visualization with SQL that computes the plotted values, unless the user asked for numbers only. Choose bar for category comparisons, line for time trends, pie only for shares of a whole with at most 8 slices, scatter for relationships between two numeric columns, histogram for distributions.
 6. For anomalies call detect_anomalies and explain using the method, bounds and reason it returns. Never guess which rows are anomalous.
 7. When joining datasets, use the relationships listed below or call compare_datasets. Aggregate the many side before joining so rows are not double counted.
 8. If the question is ambiguous (for example several plausible metric columns), state the assumption you made in one sentence and proceed, or ask one short clarifying question when no reasonable assumption exists.
@@ -78,4 +78,7 @@ def grounding_text(session: Session) -> str:
 
 
 def build_system_prompt(session: Session) -> str:
-    return f"{SYSTEM_PROMPT}\n\n=== Conversation state ===\n{build_context(session)}"
+    prompt = SYSTEM_PROMPT
+    if session.store.settings.sandbox_mode == "off":
+        prompt += "\n\nPython execution is disabled. Answer using SQL and the other tools only."
+    return f"{prompt}\n\n=== Conversation state ===\n{build_context(session)}"

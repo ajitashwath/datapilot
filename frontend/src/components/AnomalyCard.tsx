@@ -22,7 +22,7 @@ export default function AnomalyCard({ result }: { result: AnomalyResult }) {
       </div>
       <p className="mt-2 text-sm leading-relaxed text-slate-600">{result.reason}</p>
       {columns.length > 0 && (
-        <div className="scroll-thin mt-3 max-h-64 overflow-auto rounded-lg border border-slate-100">
+        <div tabIndex={0} role="region" aria-label="Affected rows" className="scroll-thin mt-3 max-h-64 overflow-auto rounded-lg border border-slate-100">
           <table className="w-full text-left text-xs">
             <thead className="sticky top-0 bg-slate-50 uppercase text-slate-500">
               <tr>

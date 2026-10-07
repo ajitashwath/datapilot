@@ -7,10 +7,36 @@ import type {
   SessionState,
   StreamEvent,
   TableResult,
+  TranscriptEntry,
   UploadResponse,
 } from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+const TOKEN_KEY = "datapilot-token";
+
+export function getToken(): string | null {
+  try {
+    return sessionStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setToken(token: string | null): void {
+  try {
+    if (token) sessionStorage.setItem(TOKEN_KEY, token);
+    else sessionStorage.removeItem(TOKEN_KEY);
+  } catch {
+    return;
+  }
+}
+
+function withAuth(init?: RequestInit): RequestInit {
+  const token = getToken();
+  if (!token) return init ?? {};
+  return { ...init, headers: { ...(init?.headers as Record<string, string> | undefined), Authorization: `Bearer ${token}` } };
+}
 
 export class ApiError extends Error {
   status: number;
@@ -26,7 +52,7 @@ export class ApiError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`${API_URL}${path}`, init);
+    response = await fetch(`${API_URL}${path}`, withAuth(init));
   } catch {
     throw new ApiError("Cannot reach the DataPilot server. Is the backend running?", 0, "network");
   }
@@ -54,6 +80,7 @@ const json = (body: unknown): RequestInit => ({
 export const setLlm = (id: string, body: { provider: string; api_key: string; model: string }) =>
   request<SessionState>(`/api/sessions/${id}/llm`, { ...json(body), method: "PUT" });
 export const clearLlm = (id: string) => request<SessionState>(`/api/sessions/${id}/llm`, { method: "DELETE" });
+export const getTranscript = (id: string) => request<TranscriptEntry[]>(`/api/sessions/${id}/transcript`);
 export const getConfig = () => request<AppConfig>("/api/config");
 export const createSession = () => request<{ session_id: string }>("/api/sessions", { method: "POST" });
 export const getSession = (id: string) => request<SessionState>(`/api/sessions/${id}`);
@@ -88,19 +115,22 @@ export async function streamChat(
 ): Promise<void> {
   let response: Response;
   try {
-    response = await fetch(`${API_URL}/api/sessions/${id}/chat`, { ...json({ message, dataset }), signal });
+    response = await fetch(`${API_URL}/api/sessions/${id}/chat`, withAuth({ ...json({ message, dataset }), signal }));
   } catch {
     if (signal.aborted) return;
     throw new ApiError("Cannot reach the DataPilot server. Is the backend running?", 0, "network");
   }
   if (!response.ok || !response.body) {
     let text = "The server could not start the analysis.";
+    let code = "chat";
     try {
-      text = (await response.json()).error?.message ?? text;
+      const body = await response.json();
+      text = body.error?.message ?? text;
+      code = body.error?.code ?? code;
     } catch {
       text = `The server returned status ${response.status}.`;
     }
-    throw new ApiError(text, response.status, "chat");
+    throw new ApiError(text, response.status, code);
   }
   const reader = response.body.getReader();
   const decoder = new TextDecoder();

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Bar,
   BarChart,
@@ -118,15 +119,63 @@ function renderChart(spec: ChartSpec) {
   );
 }
 
+const SWITCHABLE = ["bar", "line", "pie"] as const;
+
 export default function ChartView({ spec, height = 320 }: { spec: ChartSpec; height?: number }) {
+  const [type, setType] = useState<ChartSpec["type"]>(spec.type);
+  const canSwitch = (SWITCHABLE as readonly string[]).includes(spec.type) && spec.y_keys.length === 1 && spec.data.length <= 12;
+  const shown: ChartSpec = { ...spec, type };
   return (
-    <figure className="rounded-xl border border-slate-200 bg-white p-4">
-      <figcaption className="mb-2 text-sm font-semibold text-slate-800">{spec.title}</figcaption>
+    <figure className="rounded-xl border border-slate-200 bg-white p-4" aria-label={`Chart: ${spec.title}`}>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <figcaption className="text-sm font-semibold text-slate-800">{spec.title}</figcaption>
+        {canSwitch && (
+          <label className="flex items-center gap-1 text-xs text-slate-500">
+            <span className="sr-only">Chart type</span>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as ChartSpec["type"])}
+              className="rounded-md border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-700"
+            >
+              {SWITCHABLE.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
-          {renderChart(spec)}
+          {renderChart(shown)}
         </ResponsiveContainer>
       </div>
+      <details className="mt-1 text-xs text-slate-500">
+        <summary className="cursor-pointer">View chart data</summary>
+        <table className="mt-1 w-full text-left">
+          <thead>
+            <tr>
+              {Object.keys(spec.data[0] ?? {}).map((key) => (
+                <th key={key} className="pr-3 font-medium">
+                  {key}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {spec.data.slice(0, 50).map((row, i) => (
+              <tr key={i}>
+                {Object.values(row).map((value, j) => (
+                  <td key={j} className="pr-3">
+                    {String(value ?? "")}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
       {spec.note && <p className="mt-1 text-xs text-slate-500">{spec.note}</p>}
     </figure>
   );

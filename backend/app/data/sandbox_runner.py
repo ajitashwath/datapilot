@@ -97,6 +97,7 @@ def run(payload: dict) -> dict:
         return {"ok": False, "error": problem, "stdout": ""}
     namespace = {name: pd.read_parquet(path) for name, path in payload["tables"].items()}
     safe = {name: __builtins__[name] if isinstance(__builtins__, dict) else getattr(__builtins__, name) for name in SAFE_BUILTINS}
+    safe["__import__"] = __import__
     namespace.update({
         "pd": ModuleGuard(pd), "np": ModuleGuard(np), "math": ModuleGuard(math), "statistics": ModuleGuard(statistics),
         "__builtins__": safe,

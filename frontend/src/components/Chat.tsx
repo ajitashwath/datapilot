@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import AssistantMessage from "./AssistantMessage";
-import { ApiError, getOverview, streamChat } from "@/lib/api";
-import { applyEvent, newAssistantMessage } from "@/lib/chatState";
+import { ApiError, getOverview, getTranscript, streamChat } from "@/lib/api";
+import { applyEvent, messagesFromTranscript, newAssistantMessage } from "@/lib/chatState";
+import { buildReport, downloadText } from "@/lib/export";
 import type { AppConfig, ChatMessage } from "@/lib/types";
 
 interface ChatProps {
@@ -37,9 +38,11 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
 
   useEffect(() => {
     abortRef.current?.abort();
-    setMessages([]);
     setBusy(false);
-  }, [resetSignal]);
+    getTranscript(sessionId)
+      .then((entries) => setMessages(messagesFromTranscript(entries)))
+      .catch(() => setMessages([]));
+  }, [sessionId, resetSignal]);
 
   useEffect(() => {
     setSuggestions([]);
@@ -96,7 +99,17 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
   return (
     <div className="flex h-full flex-col">
       <div className="scroll-thin flex-1 overflow-y-auto px-4 py-6 sm:px-8">
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="mx-auto max-w-3xl space-y-6" role="log" aria-label="Conversation" aria-live="polite">
+          {messages.length > 0 && !busy && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => downloadText("datapilot-report.md", buildReport(messages, dataset ? `Analysis of ${dataset}` : "Analysis report"), "text/markdown")}
+                className="rounded-lg px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-white"
+              >
+                Export report
+              </button>
+            </div>
+          )}
           {messages.length === 0 && (
             <div className="pt-6">
               {datasetCount === 0 ? (
@@ -169,6 +182,7 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
             className="flex items-end gap-2 rounded-2xl border border-slate-300 bg-white p-2 shadow-card focus-within:border-brand-500"
           >
             <textarea
+              aria-label="Ask a question about your data"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -181,7 +195,7 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
               maxLength={2000}
               disabled={blocked}
               placeholder={datasetCount === 0 ? "Upload a CSV to start asking questions" : "Ask a question about your data"}
-              className="max-h-40 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-[15px] outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
+              className="max-h-40 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-[15px] outline-none placeholder:text-slate-500 disabled:cursor-not-allowed"
             />
             {busy ? (
               <button type="button" onClick={() => abortRef.current?.abort()} className="rounded-xl bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
@@ -193,7 +207,7 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
               </button>
             )}
           </form>
-          <p className="mt-2 text-center text-xs text-slate-400">Numbers come from executed queries. Check the SQL or code under each answer.</p>
+          <p className="mt-2 text-center text-xs text-slate-500">Numbers come from executed queries. Check the SQL or code under each answer.</p>
         </div>
       </div>
     </div>

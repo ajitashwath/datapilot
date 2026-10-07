@@ -1,53 +1,89 @@
+import json
 import shutil
+import uuid
 from pathlib import Path
 
 import duckdb
 
 from app.config import Settings
 from app.data.engine import run_select
-from app.data.loader import load_csv_table, save_upload, table_name_for, validate_upload
+from app.data.loader import ensure_utf8, load_csv_table, table_name_for, validate_file
 from app.data.profiler import profile_dataset, quote
 from app.data.quality import check_quality
 from app.data.relations import infer_between, measure_relationship
 from app.errors import UserError
 from app.models import DatasetProfile, QualityReport, Relationship, TableResult
 
+META_FILE = "meta.json"
+
 
 class DatasetStore:
     def __init__(self, directory: Path, settings: Settings):
+        directory.mkdir(parents=True, exist_ok=True)
         self.directory = directory
         self.settings = settings
-        self.con = duckdb.connect(":memory:")
+        self.con = duckdb.connect(str(directory / "store.duckdb"))
         self.con.execute(f"SET memory_limit='{settings.duckdb_memory_limit}'")
         self.con.execute("SET threads=2")
+        self.con.execute(f"SET temp_directory='{(directory / 'spill').as_posix()}'")
         self.profiles: dict[str, DatasetProfile] = {}
         self.quality: dict[str, QualityReport] = {}
-        self.files: dict[str, Path] = {}
         self.relationships: list[Relationship] = []
+        self.load_meta()
+
+    def load_meta(self) -> None:
+        meta_path = self.directory / META_FILE
+        if not meta_path.exists():
+            return
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        existing = {row[0] for row in self.con.execute("SELECT table_name FROM duckdb_tables()").fetchall()}
+        self.profiles = {p["name"]: DatasetProfile(**p) for p in meta["datasets"] if p["name"] in existing}
+        self.relationships = [
+            Relationship(**r) for r in meta["relationships"]
+            if r["left_table"] in self.profiles and r["right_table"] in self.profiles
+        ]
+
+    def save(self) -> None:
+        meta = {
+            "datasets": [p.model_dump(mode="json") for p in self.profiles.values()],
+            "relationships": [r.model_dump(mode="json") for r in self.relationships],
+        }
+        temporary = self.directory / (META_FILE + ".tmp")
+        temporary.write_text(json.dumps(meta), encoding="utf-8")
+        temporary.replace(self.directory / META_FILE)
 
     def table_names(self) -> set[str]:
         return set(self.profiles)
 
+    def incoming_path(self) -> Path:
+        folder = self.directory / "incoming"
+        folder.mkdir(exist_ok=True)
+        return folder / f"{uuid.uuid4().hex}.csv"
+
     def add_csv(self, filename: str, content: bytes) -> DatasetProfile:
-        if len(self.profiles) >= self.settings.max_files_per_session:
-            raise UserError(f"A session can hold at most {self.settings.max_files_per_session} datasets.", "too_many_files", 422)
-        content = validate_upload(filename, content, self.settings.max_upload_mb)
-        name = table_name_for(filename, self.table_names())
-        path = save_upload(self.directory, content)
+        path = self.incoming_path()
+        path.write_bytes(content)
+        return self.add_csv_path(filename, path)
+
+    def add_csv_path(self, filename: str, path: Path) -> DatasetProfile:
         try:
+            if len(self.profiles) >= self.settings.max_files_per_session:
+                raise UserError(f"A session can hold at most {self.settings.max_files_per_session} datasets.", "too_many_files", 422)
+            validate_file(filename, path, self.settings.max_upload_mb)
+            path = ensure_utf8(path)
+            name = table_name_for(filename, self.table_names())
             skipped = load_csv_table(self.con, name, path, filename)
             profile = profile_dataset(self.con, name, filename, skipped)
-        except UserError:
-            path.unlink(missing_ok=True)
-            raise
-        if profile.rows == 0 or profile.column_count == 0:
-            self.con.execute(f"DROP TABLE IF EXISTS {quote(name)}")
-            path.unlink(missing_ok=True)
-            raise UserError(f"'{filename}' has a header but no data rows.", "empty_file", 422)
+            if profile.rows == 0 or profile.column_count == 0:
+                self.con.execute(f"DROP TABLE IF EXISTS {quote(name)}")
+                raise UserError(f"'{filename}' has a header but no data rows.", "empty_file", 422)
+        finally:
+            for leftover in (path, path.with_name(path.stem + ".utf8.csv")):
+                leftover.unlink(missing_ok=True)
         for other in self.profiles.values():
             self.relationships.extend(infer_between(self.con, profile, other))
         self.profiles[name] = profile
-        self.files[name] = path
+        self.save()
         return profile
 
     def remove(self, name: str) -> None:
@@ -55,9 +91,9 @@ class DatasetStore:
         self.con.execute(f"DROP TABLE IF EXISTS {quote(name)}")
         del self.profiles[name]
         self.quality.pop(name, None)
-        self.files.pop(name, None)
         self.relationships = [r for r in self.relationships if name not in (r.left_table, r.right_table)]
         shutil.rmtree(self.directory / f"parquet_{name}", ignore_errors=True)
+        self.save()
 
     def get_profile(self, name: str) -> DatasetProfile:
         if name not in self.profiles:
@@ -105,11 +141,13 @@ class DatasetStore:
             if (r.left_table, r.left_column, r.right_table, r.right_column) != (*left, *right)
         ]
         self.relationships.append(relationship)
+        self.save()
         return relationship
 
     def relationships_between(self, a: str, b: str) -> list[Relationship]:
         return [r for r in self.relationships if {r.left_table, r.right_table} == {a, b}]
 
-    def close(self) -> None:
+    def close(self, delete: bool = True) -> None:
         self.con.close()
-        shutil.rmtree(self.directory, ignore_errors=True)
+        if delete:
+            shutil.rmtree(self.directory, ignore_errors=True)

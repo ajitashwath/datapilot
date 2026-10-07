@@ -49,7 +49,7 @@ function UploadZone({ onUpload, uploading, config }: { onUpload: (files: File[])
         }}
       />
       <p className="text-sm font-medium text-slate-700">{uploading ? "Uploading and profiling..." : "Drop CSV files here"}</p>
-      <p className="mt-0.5 text-xs text-slate-400">
+      <p className="mt-0.5 text-xs text-slate-500">
         or click to browse{config ? `, up to ${config.max_upload_mb} MB each` : ""}
       </p>
     </div>
@@ -69,7 +69,7 @@ function DatasetItem({ detail, active, onSelect, onRemove }: { detail: DatasetDe
           {detail.quality_score}
         </span>
       </div>
-      <div className="mt-0.5 flex items-center justify-between text-xs text-slate-500">
+      <div className="mt-0.5 flex items-center justify-between text-xs text-slate-600">
         <span>
           {p.rows.toLocaleString()} rows, {p.column_count} columns
         </span>
@@ -78,7 +78,7 @@ function DatasetItem({ detail, active, onSelect, onRemove }: { detail: DatasetDe
             e.stopPropagation();
             onRemove();
           }}
-          className="text-slate-400 opacity-0 transition hover:text-rose-600 group-hover:opacity-100"
+          className="text-slate-500 opacity-0 transition hover:text-rose-600 group-hover:opacity-100"
           aria-label={`Remove ${p.name}`}
         >
           Remove
@@ -92,7 +92,7 @@ function RelationshipRow({ r }: { r: Relationship }) {
   return (
     <li className="rounded-lg bg-white px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200">
       <p className="font-medium text-slate-800">
-        {r.left_table}.{r.left_column} <span className="text-slate-400">&rarr;</span> {r.right_table}.{r.right_column}
+        {r.left_table}.{r.left_column} <span className="text-slate-500">&rarr;</span> {r.right_table}.{r.right_column}
       </p>
       <p className="mt-0.5 text-slate-500">
         {r.cardinality}, {r.overlap_pct}% key overlap, {r.source}
@@ -155,12 +155,12 @@ export default function Sidebar(props: SidebarProps) {
   const datasets = state?.datasets ?? [];
   const filters = Object.entries(state?.filters ?? {});
   return (
-    <aside className="scroll-thin flex h-full w-80 shrink-0 flex-col gap-5 overflow-y-auto border-r border-slate-200 bg-slate-50 p-4">
+    <aside aria-label="Datasets" className="scroll-thin flex h-full w-80 max-w-[85vw] shrink-0 flex-col gap-5 overflow-y-auto border-r border-slate-200 bg-slate-50 p-4">
       <UploadZone onUpload={onUpload} uploading={uploading} config={config} />
 
       <section>
         <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Datasets</h3>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Datasets</h2>
           {config && config.sample_datasets.length > 0 && (
             <button onClick={onLoadSamples} className="text-xs font-medium text-brand-600 hover:underline">
               Load samples
@@ -188,7 +188,7 @@ export default function Sidebar(props: SidebarProps) {
 
       {datasets.length > 1 && (
         <section>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Relationships</h3>
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Relationships</h2>
           {state && state.relationships.length > 0 ? (
             <ul className="space-y-1.5">
               {state.relationships.map((r, i) => (
@@ -205,7 +205,7 @@ export default function Sidebar(props: SidebarProps) {
       {filters.length > 0 && (
         <section>
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Conversation focus</h3>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Conversation focus</h2>
             <button onClick={onClearFilters} className="text-xs font-medium text-brand-600 hover:underline">
               Clear
             </button>

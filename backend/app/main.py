@@ -8,15 +8,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.agent.llm import LLMConfig, LLMProvider, create_provider
-from app.api.routes import router
+from app.api.routes import public, router
 from app.config import Settings, get_settings
 from app.errors import UserError
+from app.limits import RateLimiter
 from app.logging_setup import log_event, request_id_var, session_id_var, setup_logging
+from app.metrics import metrics
 from app.session import SessionManager
 
 
-def error_response(status: int, code: str, message: str) -> JSONResponse:
-    return JSONResponse(status_code=status, content={"error": {"code": code, "message": message}})
+def error_response(status: int, code: str, message: str, headers: dict[str, str] | None = None) -> JSONResponse:
+    return JSONResponse(status_code=status, content={"error": {"code": code, "message": message}}, headers=headers)
 
 
 def create_app(
@@ -24,14 +26,17 @@ def create_app(
 ) -> FastAPI:
     settings = settings or get_settings()
     setup_logging(settings.log_level)
-    app = FastAPI(title="DataPilot API", version="1.0.0")
+    app = FastAPI(title="DataPilot API", version="1.1.0")
     app.state.settings = settings
     app.state.sessions = SessionManager(settings)
+    app.state.limiter = RateLimiter()
     app.state.llm_factory = llm_factory
+    restored = app.state.sessions.restore_all()
+    log_event("sessions_restored", count=restored)
 
     app.add_middleware(
         CORSMiddleware, allow_origins=[o.strip() for o in settings.cors_origins.split(",")],
-        allow_methods=["*"], allow_headers=["*"], expose_headers=["X-Request-ID"],
+        allow_methods=["*"], allow_headers=["*"], expose_headers=["X-Request-ID", "Retry-After"],
     )
 
     @app.middleware("http")
@@ -41,16 +46,21 @@ def create_app(
         session_id_var.set("-")
         started = time.perf_counter()
         response = await call_next(request)
+        duration = time.perf_counter() - started
+        route = request.scope.get("route")
+        path_label = route.path if route else "unmatched"
         response.headers["X-Request-ID"] = request_id
+        metrics.inc("datapilot_http_requests_total", method=request.method, path=path_label, status=response.status_code)
+        metrics.inc("datapilot_http_request_seconds_sum", duration, path=path_label)
         log_event(
             "request", method=request.method, path=request.url.path, status=response.status_code,
-            duration_ms=round((time.perf_counter() - started) * 1000, 1),
+            duration_ms=round(duration * 1000, 1),
         )
         return response
 
     @app.exception_handler(UserError)
     async def handle_user_error(request: Request, exc: UserError):
-        return error_response(exc.status, exc.code, exc.message)
+        return error_response(exc.status, exc.code, exc.message, exc.headers)
 
     @app.exception_handler(RequestValidationError)
     async def handle_validation_error(request: Request, exc: RequestValidationError):
@@ -62,6 +72,7 @@ def create_app(
         log_event("unhandled_error", exc_info=(type(exc), exc, exc.__traceback__), path=request.url.path)
         return error_response(500, "internal_error", "Something went wrong on the server. Please try again.")
 
+    app.include_router(public)
     app.include_router(router)
     return app
 

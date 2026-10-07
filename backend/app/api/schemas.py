@@ -68,3 +68,5 @@ class AppConfig(BaseModel):
     python_timeout_seconds: float
     max_result_rows: int
     sample_datasets: list[str]
+    auth_required: bool
+    python_enabled: bool

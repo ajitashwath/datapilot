@@ -1,6 +1,7 @@
 import argparse
 import json
 import sys
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -145,6 +146,7 @@ def run_grounding_checks() -> list[dict]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Evaluate the DataPilot analyst against ground truth computed with pandas.")
     parser.add_argument("--mode", choices=["tools", "live"], default="tools", help="tools runs reference plans on the real tools, live also calls the LLM")
+    parser.add_argument("--pause", type=float, default=0.0, help="seconds to wait between live cases")
     parser.add_argument("--only", help="comma separated case ids to run")
     parser.add_argument("--out", default=str(ROOT / "evaluation" / "results" / "latest.json"))
     args = parser.parse_args()
@@ -154,7 +156,12 @@ def main() -> int:
     llm = create_provider(settings) if live else None
     wanted = set(args.only.split(",")) if args.only else None
     cases = [c for c in CASES if (live or not c.live_only) and (wanted is None or c.id in wanted)]
-    results = [run_case(c, live, settings, llm) for c in cases] + ([] if wanted else run_grounding_checks())
+    results = []
+    for index, case in enumerate(cases):
+        if live and index and args.pause:
+            time.sleep(args.pause)
+        results.append(run_case(case, live, settings, llm))
+    results += [] if wanted else run_grounding_checks()
 
     width = max(len(r["id"]) for r in results)
     for r in results:

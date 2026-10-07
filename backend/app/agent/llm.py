@@ -7,6 +7,7 @@ from pydantic import BaseModel, SecretStr
 
 from app.config import Settings
 from app.logging_setup import log_event
+from app.metrics import metrics
 
 PROVIDER_DEFAULTS = {
     "anthropic": {"label": "Anthropic", "model": "claude-sonnet-5-5", "base_url": None},
@@ -110,6 +111,9 @@ class AnthropicProvider(LLMProvider):
         except self.anthropic.APIError as exc:
             log_event("llm_api_error", provider="anthropic", error=str(exc)[:300])
             raise LLMError("The LLM provider returned an error. Please try again.") from exc
+        elapsed = time.perf_counter() - started
+        metrics.inc("datapilot_llm_requests_total", provider="anthropic")
+        metrics.inc("datapilot_llm_seconds_sum", elapsed, provider="anthropic")
         log_event(
             "llm_request", provider="anthropic", model=self.model, duration_ms=round((time.perf_counter() - started) * 1000, 1),
             input_tokens=final.usage.input_tokens, output_tokens=final.usage.output_tokens, stop_reason=final.stop_reason,
@@ -149,7 +153,7 @@ class OpenAICompatibleProvider(LLMProvider):
         self.openai = openai
         self.provider = config.provider
         self.label = defaults["label"]
-        self.client = openai.OpenAI(api_key=config.api_key.get_secret_value(), base_url=defaults["base_url"], max_retries=1, timeout=90)
+        self.client = openai.OpenAI(api_key=config.api_key.get_secret_value(), base_url=defaults["base_url"], max_retries=4, timeout=90)
         self.model = config.resolved_model()
         self.max_tokens = max_tokens
 
@@ -221,6 +225,9 @@ class OpenAICompatibleProvider(LLMProvider):
                         slot["arguments"] += part.function.arguments or ""
         except self.openai.OpenAIError as exc:
             raise self.translate_error(exc) from exc
+        elapsed = time.perf_counter() - started
+        metrics.inc("datapilot_llm_requests_total", provider=self.provider)
+        metrics.inc("datapilot_llm_seconds_sum", elapsed, provider=self.provider)
         log_event(
             "llm_request", provider=self.provider, model=self.model, duration_ms=round((time.perf_counter() - started) * 1000, 1),
             input_tokens=getattr(usage, "prompt_tokens", None), output_tokens=getattr(usage, "completion_tokens", None),

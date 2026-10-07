@@ -13,7 +13,10 @@ def test_session_key_is_stored_and_never_returned(settings):
         assert response.status_code == 200
         assert response.json()["llm"] == {"provider": "gemini", "model": "gemini-2.5-flash"}
         assert SECRET not in response.text and SECRET not in client.get(f"/api/sessions/{sid}").text
-        assert client.app.state.sessions.get(sid).llm.api_key.get_secret_value() == SECRET
+        manager = client.app.state.sessions
+        sealed = manager.get(sid).llm
+        assert SECRET.encode() not in sealed.blob
+        assert manager.open_llm(sealed).api_key.get_secret_value() == SECRET
         assert client.delete(f"/api/sessions/{sid}/llm").json()["llm"] is None
 
 

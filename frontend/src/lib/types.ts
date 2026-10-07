@@ -137,6 +137,8 @@ export interface AppConfig {
   python_timeout_seconds: number;
   max_result_rows: number;
   sample_datasets: string[];
+  auth_required: boolean;
+  python_enabled: boolean;
 }
 
 export interface UploadResponse {
@@ -164,4 +166,9 @@ export interface ChatMessage {
   error?: string;
   warnings: string[];
   durationMs?: number;
+}
+
+export interface TranscriptEntry {
+  question: string;
+  events: StreamEvent[];
 }

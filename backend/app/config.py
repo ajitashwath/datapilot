@@ -29,6 +29,15 @@ class Settings(BaseSettings):
     max_agent_steps: int = 8
     history_turns: int = 10
 
+    secret_key: str = ""
+    access_token: str = ""
+    trust_proxy: bool = False
+    chat_per_minute: int = 12
+    upload_per_minute: int = 20
+    session_create_per_hour: int = 30
+    server_key_turn_limit: int = 100
+    sandbox_mode: str = "subprocess"
+
     cors_origins: str = "http://localhost:3000"
     sample_data_dir: str = str(ROOT_DIR / "data")
     upload_root: str = ""
