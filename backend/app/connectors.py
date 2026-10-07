@@ -221,9 +221,9 @@ def list_postgres_tables(conn: PostgresConnection, settings: Settings, connect: 
     try:
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema NOT IN %s "
+                "SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema <> ALL(%s) "
                 "AND table_type IN ('BASE TABLE', 'VIEW') ORDER BY table_schema, table_name",
-                (POSTGRES_SYSTEM_SCHEMAS,),
+                (list(POSTGRES_SYSTEM_SCHEMAS),),
             )
             return [f"{schema}.{table}" for schema, table in cursor.fetchall()]
     finally:

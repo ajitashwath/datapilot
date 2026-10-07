@@ -18,7 +18,8 @@
           "passed": true,
           "detail": "all expected facts present"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "average_order_value",
@@ -35,7 +36,8 @@
           "passed": true,
           "detail": "all expected facts present"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "top_five_customers",
@@ -52,7 +54,8 @@
           "passed": true,
           "detail": "all expected facts present"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "best_month",
@@ -69,7 +72,8 @@
           "passed": true,
           "detail": "all expected facts present"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "underperforming_products",
@@ -86,7 +90,8 @@
           "passed": true,
           "detail": "all expected facts present"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "segment_join",
@@ -108,7 +113,8 @@
           "passed": true,
           "detail": "1 executed queries"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "correlation",
@@ -125,7 +131,8 @@
           "passed": true,
           "detail": "all expected facts present"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "monthly_trend_chart",
@@ -142,7 +149,8 @@
           "passed": true,
           "detail": "charts: [('line', 24)]"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "region_comparison_chart",
@@ -159,7 +167,8 @@
           "passed": true,
           "detail": "charts: [('bar', 5)]"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "revenue_anomalies",
@@ -181,7 +190,8 @@
           "passed": true,
           "detail": "1 anomalous columns"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "daily_volume_spike",
@@ -203,7 +213,8 @@
           "passed": true,
           "detail": "1 anomalous columns"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "generate_sql",
@@ -225,7 +236,8 @@
           "passed": true,
           "detail": "1 executed queries"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "data_quality_duplicates",
@@ -242,7 +254,8 @@
           "passed": true,
           "detail": "all expected facts present"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "no_data_for_period",
@@ -254,7 +267,8 @@
           "passed": true,
           "detail": "query returned no value"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "missing_column",
@@ -276,7 +290,8 @@
           "passed": true,
           "detail": ""
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "destructive_request",
@@ -293,7 +308,8 @@
           "passed": true,
           "detail": ""
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "follow_up_its_trend",
@@ -325,7 +341,8 @@
           "passed": true,
           "detail": "charts: [('line', 24)]"
         }
-      ]
+      ],
+      "turns": []
     },
     {
       "id": "grounding: honest answer",

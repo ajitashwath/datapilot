@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from app.agent.llm import LLMError, LLMProvider, Message, TextDelta, ToolResultMessage
 from app.agent.prompts import build_system_prompt, grounding_text
 from app.agent.tools import result_for_llm, run_tool, tool_specs
+from app.metrics import metrics
 from app.models import ToolResult
 from app.session import AnalysisRecord, Session
 
@@ -120,6 +121,17 @@ def preview_of(result: ToolResult) -> str:
     return ""
 
 
+def stream_step(llm: LLMProvider, system: str, messages: list[Message], specs: list, step: int) -> Iterator[Event]:
+    text, calls = "", []
+    for item in llm.stream(system, messages, specs):
+        if isinstance(item, TextDelta):
+            text += item.text
+            yield TextEvent(step=step, delta=item.text)
+        else:
+            calls.append(item.call)
+    return text, calls
+
+
 def run_turn(session: Session, question: str, llm: LLMProvider) -> Iterator[Event]:
     settings = session.store.settings
     started = time.perf_counter()
@@ -134,14 +146,11 @@ def run_turn(session: Session, question: str, llm: LLMProvider) -> Iterator[Even
     final_text = ""
 
     for step in range(settings.max_agent_steps):
-        text, calls = "", []
         try:
-            for item in llm.stream(system, messages, specs):
-                if isinstance(item, TextDelta):
-                    text += item.text
-                    yield TextEvent(step=step, delta=item.text)
-                else:
-                    calls.append(item.call)
+            text, calls = yield from stream_step(llm, system, messages, specs, step)
+            if not text.strip() and not calls and tools_used:
+                metrics.inc("datapilot_empty_reply_retries_total")
+                text, calls = yield from stream_step(llm, system, messages, [], step)
         except LLMError as exc:
             yield ErrorEvent(message=exc.message)
             return

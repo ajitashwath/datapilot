@@ -57,6 +57,10 @@ DuckDB files are single writer and the rate limiter and session map are in proce
 - If your Postgres is on a private network, keep the default and import through a public read replica or a tunnel you control, or accept the risk and enable private connections on a dedicated deployment.
 - The scheduler is a thread inside the backend process (checks every 30 seconds). Disable it with `SCHEDULER_ENABLED=false` on instances that should not run jobs. Schedules are SQL only and store their last 20 results.
 
+## Testing the Postgres connector
+
+`bash scripts/run_postgres_tests.sh` starts a throwaway PostgreSQL (from the `pgserver` pip package) on a local port and runs `tests/test_postgres_integration.py` against it. Without a server those tests skip. Set `TEST_PG_HOST`, `TEST_PG_PORT`, `TEST_PG_USER` and `TEST_PG_PASSWORD` to use your own instance (the account needs permission to create databases and roles).
+
 ## Persistence and cleanup
 
 - Datasets, profiles, filters, conversation history and the saved transcript survive restarts.

@@ -14,9 +14,10 @@ class FakeChunk:
         self.usage = usage
 
 
-def tool_part(index, call_id=None, name=None, arguments=None):
+def tool_part(index, call_id=None, name=None, arguments=None, extra=None):
     function = type("Fn", (), {"name": name, "arguments": arguments})()
-    return type("Part", (), {"index": index, "id": call_id, "function": function})()
+    model_extra = {"extra_content": extra} if extra else {}
+    return type("Part", (), {"index": index, "id": call_id, "function": function, "model_extra": model_extra})()
 
 
 class FakeClient:
@@ -124,3 +125,25 @@ def test_tool_schemas_are_simplified_for_gemini():
         assert set(schema.get("required", [])) <= set(schema["properties"])
     visual = next(s for s in schemas if "chart_type" in s["properties"])
     assert visual["properties"]["series"]["type"] == "string"
+
+
+def test_gemini_tool_replies_carry_the_function_name_but_openai_ones_do_not():
+    history = [
+        Message(role="assistant", text="", tool_calls=[ToolCall(id="a", name="execute_sql", input={})]),
+        Message(role="tool", tool_results=[ToolResultMessage(call_id="a", content="{}")]),
+    ]
+    gemini = provider("gemini", FakeClient()).convert("s", history)[-1]
+    openai_reply = provider("openai", FakeClient()).convert("s", history)[-1]
+    assert gemini["name"] == "execute_sql" and "name" not in openai_reply
+
+
+def test_provider_specific_tool_call_data_is_captured_and_sent_back_unchanged():
+    signature = {"google": {"thought_signature": "opaque-signature-value"}}
+    chunks = [
+        FakeChunk(tool_calls=[tool_part(0, "c1", "execute_sql", '{"query": "SELECT 1"}', extra=signature)]),
+        FakeChunk(tool_calls=[tool_part(1, "c2", "get_schema", "{}")]),
+    ]
+    calls = [i.call for i in run(provider("gemini", FakeClient(chunks))) if isinstance(i, ToolUse)]
+    assert calls[0].extra == signature and calls[1].extra is None
+    converted = provider("gemini", FakeClient()).convert("s", [Message(role="assistant", text="", tool_calls=calls)])[-1]["tool_calls"]
+    assert converted[0]["extra_content"] == signature and "extra_content" not in converted[1]

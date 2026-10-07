@@ -35,6 +35,7 @@ class ToolCall(BaseModel):
     id: str
     name: str
     input: dict[str, Any]
+    extra: dict[str, Any] | None = None
 
 
 class ToolResultMessage(BaseModel):
@@ -159,19 +160,25 @@ class OpenAICompatibleProvider(LLMProvider):
 
     def convert(self, system: str, messages: list[Message]) -> list[dict]:
         converted: list[dict] = [{"role": "system", "content": system}]
+        names: dict[str, str] = {}
         for m in messages:
             if m.role == "user":
                 converted.append({"role": "user", "content": m.text})
             elif m.role == "assistant":
                 entry: dict = {"role": "assistant", "content": m.text or None}
+                names.update({c.id: c.name for c in m.tool_calls})
                 if m.tool_calls:
                     entry["tool_calls"] = [
-                        {"id": c.id, "type": "function", "function": {"name": c.name, "arguments": json.dumps(c.input)}}
+                        {"id": c.id, "type": "function", "function": {"name": c.name, "arguments": json.dumps(c.input)}, **({"extra_content": c.extra} if c.extra else {})}
                         for c in m.tool_calls
                     ]
                 converted.append(entry)
             else:
-                converted += [{"role": "tool", "tool_call_id": r.call_id, "content": r.content} for r in m.tool_results]
+                for r in m.tool_results:
+                    reply = {"role": "tool", "tool_call_id": r.call_id, "content": r.content}
+                    if self.provider == "gemini":
+                        reply["name"] = names.get(r.call_id, "")
+                    converted.append(reply)
         return converted
 
     def request_options(self) -> dict:
@@ -216,10 +223,11 @@ class OpenAICompatibleProvider(LLMProvider):
                     index = part.index or 0
                     slot = by_index.get(index)
                     if slot is None or (part.id and slot["id"] and part.id != slot["id"]):
-                        slot = {"id": "", "name": "", "arguments": ""}
+                        slot = {"id": "", "name": "", "arguments": "", "extra": None}
                         slots.append(slot)
                         by_index[index] = slot
                     slot["id"] = part.id or slot["id"]
+                    slot["extra"] = (part.model_extra or {}).get("extra_content") or slot["extra"]
                     if part.function:
                         slot["name"] += part.function.name or ""
                         slot["arguments"] += part.function.arguments or ""
@@ -237,7 +245,9 @@ class OpenAICompatibleProvider(LLMProvider):
                 arguments = json.loads(slot["arguments"] or "{}")
             except json.JSONDecodeError:
                 arguments = {}
-            yield ToolUse(call=ToolCall(id=slot["id"] or f"call_{n}", name=slot["name"], input=arguments if isinstance(arguments, dict) else {}))
+            yield ToolUse(call=ToolCall(
+                id=slot["id"] or f"call_{n}", name=slot["name"], input=arguments if isinstance(arguments, dict) else {}, extra=slot["extra"],
+            ))
 
 
 def server_config(settings: Settings) -> LLMConfig | None:

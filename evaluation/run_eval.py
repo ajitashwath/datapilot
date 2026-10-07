@@ -123,15 +123,18 @@ def evaluate_turn(turn: Turn, outcome: TurnOutcome, live: bool, session: Session
 def run_case(case: Case, live: bool, settings: Settings, llm: LLMProvider | None) -> dict:
     session = make_session(settings)
     checks: list[Check] = []
+    transcript: list[dict] = []
     try:
         for turn in case.turns:
             outcome = run_live(session, turn, llm) if live else run_plan(session, turn)
             checks.extend(evaluate_turn(turn, outcome, live, session))
+            transcript.append({"question": turn.question, "tools": outcome.tools_used, "answer": outcome.answer[:600], "warnings": outcome.warnings})
     finally:
         session.store.close()
     return {
         "id": case.id, "category": case.category, "passed": all(c.passed for c in checks),
         "checks": [c.__dict__ for c in checks],
+        "turns": transcript if live else [],
     }
 
 
