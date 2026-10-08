@@ -32,6 +32,30 @@ docker compose up --build -d
 
 Set `NEXT_PUBLIC_API_URL` as a build arg in `docker-compose.yml` to the public API URL before building the frontend image, because Next.js bakes it into the bundle.
 
+## Deploy on a server with automatic HTTPS
+
+`docker-compose.prod.yml` runs Caddy, the backend and the frontend on one domain. Caddy gets and renews Let's Encrypt certificates by itself, sends `/api/*` to the backend without buffering (chat answers stream) and everything else to the frontend. Only ports 80 and 443 are exposed.
+
+1. Get a small Linux server (2 GB RAM or more) with Docker installed, and point a DNS `A` record for your domain at its IP address.
+2. Copy the project to the server, then create `.env` from `.env.example` and set at least:
+
+```
+DOMAIN=data.example.com
+SECRET_KEY=<a Fernet key, see the table above>
+GEMINI_API_KEY=<your key, optional>
+REGISTRATION=closed
+```
+
+   `docker-compose.prod.yml` already sets `AUTH_MODE=accounts`, `TRUST_PROXY=true`, `PUBLIC_URL` and `CORS_ORIGINS` from `DOMAIN`. Register your own account first and then set `REGISTRATION=closed`, or set `ALLOWED_EMAIL_DOMAIN`. Add the `SMTP_*` settings if you want email, and `OIDC_*` for single sign-on.
+3. Start it:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+4. Open `https://data.example.com`. The first certificate takes a few seconds. If it does not appear, check that ports 80 and 443 are open and that DNS points at the server, then read `docker compose -f docker-compose.prod.yml logs caddy`.
+5. Update later with `git pull` and the same command. Data lives in the `datapilot-data` volume, so back it up (it holds `app.db` and one folder per workspace).
+
 ## Behind HTTPS
 
 Put a reverse proxy (Caddy, nginx or a cloud load balancer) in front of both services. Requirements:
