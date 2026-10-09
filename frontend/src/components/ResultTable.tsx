@@ -15,8 +15,8 @@ export default function ResultTable({ table, pageSize = 10 }: { table: TableResu
           <caption className="sr-only">Query result</caption>
           <thead className="sticky top-0 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
             <tr>
-              {table.columns.map((c) => (
-                <th key={c} className="whitespace-nowrap px-3 py-2 font-medium">
+              {table.columns.map((c, i) => (
+                <th key={`${c}-${i}`} className="whitespace-nowrap px-3 py-2 font-medium">
                   {c}
                 </th>
               ))}
