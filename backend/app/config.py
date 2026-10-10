@@ -65,6 +65,8 @@ class Settings(BaseSettings):
     reset_token_minutes: int = 60
     verify_token_hours: int = 24
     forgot_per_hour: int = 5
+    contact_email: str = ""
+    contact_per_hour: int = 5
 
     oidc_issuer: str = ""
     oidc_client_id: str = ""

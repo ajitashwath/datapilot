@@ -32,12 +32,12 @@ function Verify() {
       {state === "working" && <p role="status" className="text-sm text-slate-600">Confirming your email...</p>}
       {state === "done" && (
         <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-          Your email is confirmed. You can <a href="/" className="font-medium underline">sign in now</a>.
+          Your email is confirmed. You can <a href="/login" className="font-medium underline">sign in now</a>.
         </p>
       )}
       {state === "failed" && (
         <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
-          {message} <a href="/" className="font-medium underline">Back to sign in</a> to request a new link.
+          {message} <a href="/login" className="font-medium underline">Back to sign in</a> to request a new link.
         </p>
       )}
     </LinkPage>

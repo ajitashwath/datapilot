@@ -91,6 +91,7 @@ backend/app/
   sharing.py         read-only share link snapshots
   schedules.py       saved queries and the scheduler thread
   connectors.py      URL, Google Sheets, SQLite and Postgres imports with SSRF protection
+  mailer.py          SMTP delivery for account, schedule and contact emails
   jobs.py            in-process background job runner for imports
   api/               routes (core, accounts, sharing, schedules, connectors), schemas, auth and rate limit dependencies
   agent/
@@ -110,7 +111,7 @@ backend/app/
     sandbox.py       Python sandbox (parent side)
     sandbox_runner.py  Python sandbox (child process)
     overview.py      dashboard summary and suggested questions
-frontend/src/        Next.js app, components, API client, SSE parser
+frontend/src/        Next.js public site (/), app (/app), sign-in (/login), components, API client, SSE parser
 data/                sample CSVs and the script that generated them
 tests/               pytest suite (no LLM or network needed)
 evaluation/          ground truth evaluation cases and runner
@@ -203,7 +204,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000, click **Load sample data** and start asking questions.
+Open http://localhost:3000/app, click **Load sample data** and start asking questions. The public website is at http://localhost:3000 and sign-in at /login.
 
 ### Tests
 
@@ -220,7 +221,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-The UI is on http://localhost:3000 and the API on http://localhost:8000. The backend container runs as a non-root user with a read-only root filesystem, dropped capabilities, a process and memory limit, and a named volume for session data. The sample data is mounted read-only from `./data`. See [docs/DEPLOY.md](docs/DEPLOY.md) for production settings, HTTPS, monitoring and alert examples.
+The website is on http://localhost:3000, the app on http://localhost:3000/app and the API on http://localhost:8000. The backend container runs as a non-root user with a read-only root filesystem, dropped capabilities, a process and memory limit, and a named volume for session data. The sample data is mounted read-only from `./data`. See [docs/DEPLOY.md](docs/DEPLOY.md) for production settings, HTTPS, monitoring and alert examples.
 
 ## Example questions
 

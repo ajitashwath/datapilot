@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import AccountMenu from "@/components/AccountMenu";
-import AuthGate from "@/components/AuthGate";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import TwoFactorDialog from "@/components/TwoFactorDialog";
 import Chat from "@/components/Chat";
@@ -64,6 +64,7 @@ function largestDataset(datasets: DatasetDetail[]): string | null {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -73,7 +74,6 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState<{ kind: "error" | "info"; text: string } | null>(null);
   const [resetSignal, setResetSignal] = useState(0);
-  const [login, setLogin] = useState<{ needed: boolean; message: string | null }>({ needed: false, message: null });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [scheduleSql, setScheduleSql] = useState<string | null>(null);
@@ -104,7 +104,7 @@ export default function Home() {
         const hadToken = getToken() !== null;
         setToken(null);
         setUser(null);
-        setLogin({ needed: true, message: hadToken ? "Please sign in again." : null });
+        router.replace(hadToken ? "/login?expired=1" : "/login");
         return;
       }
       if (error instanceof ApiError && error.code === "session_not_found") {
@@ -114,7 +114,7 @@ export default function Home() {
       }
       setNotice({ kind: "error", text: error instanceof ApiError ? error.message : "Something went wrong. Please try again." });
     },
-    [startSession],
+    [router, startSession],
   );
 
   const boot = useCallback(
@@ -150,13 +150,13 @@ export default function Home() {
       .then((cfg) => {
         setConfig(cfg);
         if (cfg.auth_required && !getToken()) {
-          setLogin({ needed: true, message: null });
+          router.replace("/login");
           return;
         }
         boot(cfg).catch(fail);
       })
       .catch(fail);
-  }, [boot, fail]);
+  }, [boot, fail, router]);
 
   const refresh = useCallback(async () => {
     if (!sessionId) return;
@@ -287,21 +287,8 @@ export default function Home() {
     setUser(null);
     setSessionId(null);
     setState(null);
-    setLogin({ needed: true, message: null });
+    router.replace("/login");
   }
-
-  function handleSharedToken(token: string) {
-    setToken(token);
-    setLogin({ needed: false, message: null });
-    if (config) boot(config).catch(fail);
-  }
-
-  function handleSignedIn() {
-    setLogin({ needed: false, message: null });
-    if (config) boot(config).catch(fail);
-  }
-
-  if (login.needed && config) return <AuthGate config={config} message={login.message} onSharedToken={handleSharedToken} onSignedIn={handleSignedIn} />;
 
   const selectedProfile = state?.datasets.find((d) => d.profile.name === selected)?.profile ?? null;
   const hasLinkedData = Boolean(state?.datasets.some((d) => d.profile.source?.startsWith("url:")));

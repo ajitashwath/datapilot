@@ -26,7 +26,7 @@ Edit `.env`:
 docker compose up --build -d
 ```
 
-- Frontend: http://localhost:3000, API: http://localhost:8000
+- Website: http://localhost:3000, app: http://localhost:3000/app, API: http://localhost:8000
 - Data volume: `datapilot-data` mounted at `/var/lib/datapilot` (one folder per session with a DuckDB file).
 - The backend container is non-root, read-only, drops all capabilities and is limited to 3 GB and 256 processes.
 
@@ -107,6 +107,34 @@ Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` and `PUB
 - Existing accounts are treated as confirmed when you switch confirmation on.
 - Use a dedicated sending address with SPF and DKIM set up, or reset emails will land in spam.
 - Delivery failures are logged (`email_failed`) and counted in `datapilot_emails_total{status="failed"}`; the request that triggered the email still succeeds so the form never reveals whether an address exists.
+
+## Public website and SEO
+
+The frontend now serves a public website at `/` (features, examples, blog, about, contact, terms, privacy) and the app itself at `/app`. Sign-in lives at `/login`. Everything on the public site is set at build time through `NEXT_PUBLIC_*` variables, so rebuild the frontend image after changing them. Anything left empty is simply not shown; nothing is invented.
+
+| Variable | Used for |
+| --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | Canonical links, sitemap, robots.txt, llms.txt and structured data. The production compose file sets it to `https://${DOMAIN}`. |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | Visible contact email (footer, contact page, legal pages) and the Organization structured data. |
+| `NEXT_PUBLIC_CONTACT_PHONE` | Tap-to-call link, for example `+91 98765 43210`. |
+| `NEXT_PUBLIC_SUPPORT_HOURS` | Support hours in schema.org style, for example `Mo-Fr 09:00-18:00, Sa 10:00-14:00`. A malformed value hides the hours instead of showing something wrong. |
+| `NEXT_PUBLIC_SUPPORT_TIMEZONE` | Time zone shown with the hours, for example `Asia/Kolkata`. Defaults to UTC. |
+| `NEXT_PUBLIC_LEGAL_NAME`, `NEXT_PUBLIC_LEGAL_JURISDICTION` | The operator named in the terms and privacy policy and the governing law. Have the legal pages reviewed for your jurisdiction before launch. |
+| `NEXT_PUBLIC_GITHUB_URL`, `NEXT_PUBLIC_LINKEDIN_URL`, `NEXT_PUBLIC_X_URL` | Social links. Only `https://` addresses are shown. GitHub defaults to the project repository. |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Google Search Console HTML tag verification. |
+| `NEXT_PUBLIC_GA_ID` | Optional Google Analytics 4 measurement id (`G-...`). Analytics only loads after a visitor accepts it in the cookie banner. |
+
+The contact form posts to `POST /api/contact` and needs the backend variables `CONTACT_EMAIL` (where messages go) and working SMTP. It is rate limited per IP (`CONTACT_PER_HOUR`, default 5), has a honeypot field, and sets `Reply-To` to the sender. Without them the page shows the contact email instead of the form.
+
+### Google Search Console
+
+1. Deploy with `NEXT_PUBLIC_SITE_URL` set to the public address.
+2. In Search Console add a URL prefix property for that address, choose the HTML tag method and copy the `content` value.
+3. Set it as `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, rebuild and redeploy the frontend, then press Verify.
+4. Under Sitemaps submit `sitemap.xml`. robots.txt already points to it.
+5. Use URL inspection on the home page and one feature page to confirm the canonical URL and structured data (Organization, WebSite, SoftwareApplication, BreadcrumbList and BlogPosting) are detected.
+
+The app (`/app`), share links, and the reset, verify and single sign-on pages send `noindex`. They are deliberately not blocked in robots.txt, because a blocked page cannot be read and its `noindex` would be ignored.
 
 ## Webhook notifications
 

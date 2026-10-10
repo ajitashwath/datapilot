@@ -18,13 +18,15 @@ class Mailer:
     def enabled(self) -> bool:
         return self.settings.email_enabled()
 
-    def build(self, to: str, subject: str, body: str) -> EmailMessage:
-        if any(ch in to + subject for ch in "\r\n"):
+    def build(self, to: str, subject: str, body: str, reply_to: str = "") -> EmailMessage:
+        if any(ch in to + subject + reply_to for ch in "\r\n"):
             raise UserError("Invalid email header.", "invalid_email", 422)
         message = EmailMessage()
         message["From"] = self.settings.smtp_from
         message["To"] = to
         message["Subject"] = subject
+        if reply_to:
+            message["Reply-To"] = reply_to
         message.set_content(body)
         return message
 
@@ -41,11 +43,11 @@ class Mailer:
                 client.login(s.smtp_user, s.smtp_password)
             client.send_message(message)
 
-    def send_now(self, to: str, subject: str, body: str) -> bool:
+    def send_now(self, to: str, subject: str, body: str, reply_to: str = "") -> bool:
         if not self.enabled:
             return False
         try:
-            self.deliver(self.build(to, subject, body))
+            self.deliver(self.build(to, subject, body, reply_to))
             metrics.inc("datapilot_emails_total", status="sent")
             log_event("email_sent", subject=subject[:60])
             return True
@@ -54,9 +56,9 @@ class Mailer:
             log_event("email_failed", subject=subject[:60], exc_info=True)
             return False
 
-    def send(self, to: str, subject: str, body: str) -> None:
+    def send(self, to: str, subject: str, body: str, reply_to: str = "") -> None:
         if self.enabled:
-            self.pool.submit(self.send_now, to, subject, body)
+            self.pool.submit(self.send_now, to, subject, body, reply_to)
 
     def shutdown(self) -> None:
         self.pool.shutdown(wait=False, cancel_futures=True)
