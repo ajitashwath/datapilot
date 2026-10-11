@@ -25,19 +25,19 @@ export default function LegalPage({ title, path, lead, effective, sections }: Le
           Effective <time dateTime={effective}>{formatDate(effective)}</time>
         </p>
       </PageIntro>
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[220px_1fr]">
+      <div className="mx-auto grid max-w-[1200px] gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[220px_1fr]">
         <nav aria-label="On this page" className="hidden lg:block">
           <ol className="sticky top-24 space-y-2 text-sm">
             {sections.map((s, i) => (
               <li key={s.id}>
-                <a href={`#${s.id}`} className="text-slate-600 hover:text-brand-700 hover:underline">
+                <a href={`#${s.id}`} className="text-slate-600 hover:text-brand-600 hover:underline">
                   {i + 1}. {s.title}
                 </a>
               </li>
             ))}
           </ol>
         </nav>
-        <div className="max-w-3xl space-y-10 text-slate-700 [&_a]:font-medium [&_a]:text-brand-700 [&_a]:underline [&_li]:mt-1.5 [&_p]:mt-3 [&_p]:leading-relaxed [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:pl-6">
+        <div className="max-w-3xl space-y-10 text-slate-700 [&_a]:font-medium [&_a]:text-brand-600 [&_a]:underline [&_li]:mt-1.5 [&_p]:mt-3 [&_p]:leading-relaxed [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:pl-6">
           {sections.map((s, i) => (
             <section key={s.id} id={s.id} aria-labelledby={`${s.id}-title`} className="scroll-mt-24">
               <h2 id={`${s.id}-title`} className="text-xl font-semibold text-slate-900">

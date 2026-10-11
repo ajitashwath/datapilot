@@ -27,12 +27,12 @@ export default function BlogPage() {
                   <time dateTime={post.published}>{formatDate(post.published)}</time> · {post.minutes} min read · {post.tags.join(", ")}
                 </p>
                 <h2 className="mt-2 text-xl font-semibold leading-snug text-slate-900">
-                  <Link href={`/blog/${post.slug}`} className="hover:text-brand-700">
+                  <Link href={`/blog/${post.slug}`} className="hover:text-brand-600">
                     {post.title}
                   </Link>
                 </h2>
                 <p className="mt-2 leading-relaxed text-slate-600">{post.description}</p>
-                <Link href={`/blog/${post.slug}`} className="mt-3 inline-block text-sm font-semibold text-brand-700 hover:underline" aria-label={`Read ${post.title}`}>
+                <Link href={`/blog/${post.slug}`} className="mt-3 inline-block text-sm font-semibold text-brand-600 hover:underline" aria-label={`Read ${post.title}`}>
                   Read the post
                 </Link>
               </article>

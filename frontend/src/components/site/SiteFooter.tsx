@@ -6,13 +6,13 @@ import CookieSettingsButton from "./CookieSettingsButton";
 import Logo from "./Logo";
 import SocialIcon from "./SocialIcon";
 
-const linkClass = "text-sm text-slate-600 hover:text-brand-700 hover:underline";
+const linkClass = "text-sm text-slate-700 hover:text-brand-600";
 
 export default function SiteFooter() {
   const year = new Date().getFullYear();
   return (
     <footer className="border-t border-slate-200 bg-surface">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-[1200px] gap-10 px-4 py-16 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <Logo />
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-slate-600">{site.tagline}. Answers computed on your real data, with the code shown.</p>
@@ -30,7 +30,7 @@ export default function SiteFooter() {
                     target="_blank"
                     rel="noopener noreferrer me"
                     aria-label={`DataPilot on ${link.name} (opens in a new tab)`}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 ring-1 ring-slate-200 hover:bg-slate-100 hover:text-slate-900"
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-slate-600 ring-1 ring-slate-200 hover:text-brand-600 hover:ring-brand-500"
                   >
                     <SocialIcon name={link.name} />
                   </a>
@@ -78,7 +78,7 @@ export default function SiteFooter() {
         </nav>
       </div>
       <div className="border-t border-slate-200">
-        <p className="mx-auto max-w-6xl px-4 py-5 text-xs text-slate-500 sm:px-6">
+        <p className="mx-auto max-w-[1200px] px-4 py-6 text-xs text-slate-500 sm:px-6">
           &copy; {year} {site.legalName}. All rights reserved.
         </p>
       </div>

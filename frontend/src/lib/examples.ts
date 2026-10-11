@@ -55,8 +55,8 @@ export const examples: Example[] = [
     title: "A question becomes a chart with the query behind it",
     question: "Which region has the highest revenue? Show a chart and check the revenue column for anomalies.",
     before: { label: "orders.csv, 7,044 rows", text: ORDERS },
-    after: { label: "Answer and chart computed by SQL", image: analystChart, alt: "Answer naming North America as the highest revenue region, with tool calls for SQL, chart and anomaly detection and a bar chart of revenue by region" },
-    outcome: "North America leads at 3,275,899.34. The figure, the chart and the anomaly check each come from a tool call that ran in milliseconds, and the SQL sits under the answer.",
+    after: { label: "Answer and chart computed by SQL", image: analystChart, alt: "Answer with tool calls for SQL, chart and anomaly detection, a summary of the revenue anomalies and a bar chart of total revenue by region led by North America" },
+    outcome: "A chart of total revenue by region, led by North America, plus 492 revenue values outside the IQR fences. The chart, the figures and the anomaly check each come from a tool call that ran in milliseconds, and the SQL sits under the answer.",
     feature: "charts",
   },
   {

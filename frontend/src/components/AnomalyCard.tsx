@@ -4,7 +4,7 @@ import type { AnomalyResult } from "@/lib/types";
 const severityStyle: Record<string, string> = {
   high: "bg-rose-100 text-rose-700 ring-rose-200",
   medium: "bg-amber-100 text-amber-700 ring-amber-200",
-  low: "bg-sky-100 text-sky-700 ring-sky-200",
+  low: "bg-slate-100 text-slate-700 ring-slate-200",
   none: "bg-emerald-100 text-emerald-700 ring-emerald-200",
 };
 

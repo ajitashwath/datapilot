@@ -40,14 +40,14 @@ export default function AboutPage() {
         title="An AI analyst you can audit"
         lead="DataPilot started from a simple frustration: AI tools that answer data questions with confident numbers nobody can trace. We built the analyst we wanted to use, one that shows exactly how every figure was computed."
       />
-      <div className="mx-auto max-w-6xl space-y-16 px-4 py-12 sm:px-6">
+      <div className="mx-auto max-w-[1200px] space-y-16 px-4 py-12 sm:px-6">
         <section aria-labelledby="principles-title">
           <h2 id="principles-title" className="text-2xl font-semibold tracking-tight text-slate-900">
             What we believe
           </h2>
           <ul className="mt-6 grid gap-5 md:grid-cols-2">
             {principles.map((p) => (
-              <li key={p.title} className="rounded-xl border border-slate-200 bg-surface p-6">
+              <li key={p.title} className="rounded-xl border border-slate-200 p-6">
                 <h3 className="font-semibold text-slate-900">{p.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">{p.body}</p>
               </li>
@@ -69,7 +69,7 @@ export default function AboutPage() {
               Structured logs, Prometheus metrics, rate limits and an evaluation suite of benchmark questions keep the system observable and its answers measurable.
             </p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-surface p-6">
+          <div className="rounded-xl border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900">Get in touch</h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">Questions about DataPilot, team plans or security? We read every message.</p>
             <div className="mt-4 flex flex-wrap gap-3">

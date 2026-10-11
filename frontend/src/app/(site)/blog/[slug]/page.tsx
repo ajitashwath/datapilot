@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Breadcrumbs from "@/components/site/Breadcrumbs";
+import { ArrowRight } from "@/components/site/Icons";
 import JsonLd from "@/components/site/JsonLd";
+import { primaryButton } from "@/components/site/ui";
 import { type Block, formatDate, postBySlug, posts } from "@/lib/blog";
 import { pageMetadata } from "@/lib/seo";
 import { absoluteUrl, site } from "@/lib/site";
@@ -96,22 +98,26 @@ export default async function PostPage({ params }: Props) {
         <p className="mt-4 text-lg leading-relaxed text-slate-600">{post.description}</p>
       </header>
       <div className="mt-6 border-t border-slate-200 pt-2">{post.body.map(renderBlock)}</div>
-      <aside className="mt-12 rounded-2xl bg-gradient-to-br from-brand-700 to-sky-600 p-6 text-white">
-        <p className="text-lg font-semibold">Try it on your own data</p>
-        <p className="mt-1 text-sm text-white/85">Upload a CSV or load the sample datasets and ask your first question.</p>
-        <Link href="/login?mode=register" className="mt-4 inline-block rounded-lg bg-white px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50">
+      <aside className="mt-14 rounded-xl border border-slate-200 p-8">
+        <p className="text-2xl font-semibold tracking-tight">
+          <span className="text-slate-900">Try it on </span>
+          <span className="text-brand-500">your own data.</span>
+        </p>
+        <p className="mt-2 text-slate-700">Upload a CSV or load the sample datasets and ask your first question.</p>
+        <Link href="/login?mode=register" className={`mt-6 ${primaryButton}`}>
           Get started
+          <ArrowRight />
         </Link>
       </aside>
       <nav aria-label="More posts" className="mt-10 grid gap-4 sm:grid-cols-2">
         {older && (
-          <Link href={`/blog/${older.slug}`} className="rounded-xl border border-slate-200 bg-surface p-4 hover:border-brand-500">
+          <Link href={`/blog/${older.slug}`} className="rounded-xl border border-slate-200 p-4 hover:border-brand-500">
             <span className="text-xs text-slate-500">Older post</span>
             <span className="mt-1 block font-semibold text-slate-900">{older.title}</span>
           </Link>
         )}
         {newer && (
-          <Link href={`/blog/${newer.slug}`} className="rounded-xl border border-slate-200 bg-surface p-4 text-right hover:border-brand-500 sm:col-start-2">
+          <Link href={`/blog/${newer.slug}`} className="rounded-xl border border-slate-200 p-4 text-right hover:border-brand-500 sm:col-start-2">
             <span className="text-xs text-slate-500">Newer post</span>
             <span className="mt-1 block font-semibold text-slate-900">{newer.title}</span>
           </Link>

@@ -19,8 +19,8 @@ export default function ContactPage() {
         title="Contact us"
         lead="Questions about DataPilot, team rollouts, security or your data? Send a message and we will reply by email."
       />
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.4fr_1fr] lg:items-start">
-        <section aria-labelledby="form-title" className="rounded-2xl border border-slate-200 bg-surface p-6 shadow-card sm:p-8">
+      <div className="mx-auto grid max-w-[1200px] gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.4fr_1fr] lg:items-start">
+        <section aria-labelledby="form-title" className="rounded-xl border border-slate-200 p-6 sm:p-8">
           <h2 id="form-title" className="text-lg font-semibold text-slate-900">
             Send a message
           </h2>
@@ -28,14 +28,14 @@ export default function ContactPage() {
         </section>
         <aside aria-label="Contact details" className="space-y-6">
           {hasContactDetails() && (
-            <section className="rounded-2xl border border-slate-200 bg-surface p-6">
+            <section className="rounded-xl border border-slate-200 p-6">
               <h2 className="mb-4 text-lg font-semibold text-slate-900">
                 Other ways to reach us
               </h2>
               <ContactDetails />
             </section>
           )}
-          <section className="rounded-2xl border border-slate-200 bg-surface p-6">
+          <section className="rounded-xl border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900">Security reports</h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
               Found a vulnerability? Send it with the topic &quot;Security report&quot;, or by email, and include steps to reproduce. Please give us a reasonable time to fix the issue before disclosing it publicly.

@@ -21,8 +21,8 @@ import {
 import { compactNumber, formatNumber } from "@/lib/format";
 import type { ChartSpec } from "@/lib/types";
 
-const COLORS = ["#14a89a", "#6366f1", "#f59e0b", "#f43f5e", "#0ea5e9", "#8b5cf6", "#84cc16", "#ec4899"];
-const axisStyle = { fontSize: 12, fill: "#64748b" };
+const COLORS = ["#f53900", "#4d4b4b", "#ff9466", "#a8a3a3", "#a82700", "#2e2b2b", "#ffc2ad", "#6b6767"];
+const axisStyle = { fontSize: 12, fill: "#6b6767" };
 const margin = { top: 8, right: 16, bottom: 28, left: 8 };
 
 const tooltipFormatter = (value: unknown) => (typeof value === "number" ? formatNumber(value) : String(value));
@@ -33,7 +33,7 @@ function renderChart(spec: ChartSpec) {
       dataKey={spec.x_key}
       tick={axisStyle}
       tickLine={false}
-      axisLine={{ stroke: "#cbd5e1" }}
+      axisLine={{ stroke: "#d6d2d1" }}
       interval="preserveStartEnd"
       label={{ value: spec.x_label, position: "insideBottom", offset: -16, style: axisStyle }}
     />
@@ -48,7 +48,7 @@ function renderChart(spec: ChartSpec) {
       label={{ value: spec.y_label, angle: -90, position: "insideLeft", offset: 4, style: { ...axisStyle, textAnchor: "middle" } }}
     />
   );
-  const grid = <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />;
+  const grid = <CartesianGrid stroke="#e5e5e5" strokeDasharray="3 3" vertical={false} />;
   const legend = spec.y_keys.length > 1 ? <Legend verticalAlign="top" height={28} iconType="circle" /> : null;
 
   if (spec.type === "line") {

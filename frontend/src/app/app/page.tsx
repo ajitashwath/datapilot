@@ -34,6 +34,7 @@ import {
   waitForJob,
 } from "@/lib/api";
 import type { AppConfig, DatasetDetail, SessionState, UploadResponse, User } from "@/lib/types";
+import BrandMark from "@/components/BrandMark";
 
 const SESSION_KEY = "datapilot-session";
 let storageOwner = "anonymous";
@@ -305,9 +306,7 @@ export default function Home() {
         className={`${sidebarOpen ? "fixed inset-y-0 left-0 z-40 flex" : "hidden md:flex"} w-72 max-w-[85vw] shrink-0 flex-col border-r border-slate-200 bg-surface`}
       >
         <div className="flex items-center gap-3 px-4 pb-3 pt-4">
-          <div aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-sky-500 text-sm font-bold text-white shadow-card">
-            DP
-          </div>
+          <BrandMark className="h-8 w-auto" />
           <div>
             <h1 className="text-base font-semibold leading-tight text-slate-900">DataPilot</h1>
             <p className="text-xs text-slate-500">Verified answers from your data</p>

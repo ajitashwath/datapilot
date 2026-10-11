@@ -16,9 +16,19 @@ const config: Config = {
         code: token("code"),
         "code-fg": token("code-fg"),
       },
+      fontFamily: {
+        sans: ["var(--font-geist)", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
+      },
+      borderRadius: {
+        md: "4px",
+        lg: "4px",
+        xl: "8px",
+        "2xl": "12px",
+      },
       boxShadow: {
-        card: "0 1px 2px rgb(var(--shadow) / 0.05), 0 6px 20px rgb(var(--shadow) / 0.05)",
-        float: "0 10px 40px rgb(var(--shadow) / 0.14)",
+        card: "0 1px 2px 0 rgb(var(--shadow) / 0.05)",
+        float: "0 1px 2px 0 rgb(var(--shadow) / 0.05), 0 8px 24px -8px rgb(var(--shadow) / 0.12)",
       },
     },
   },

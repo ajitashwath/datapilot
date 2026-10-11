@@ -108,7 +108,7 @@ export default function ContactForm({ fallbackEmail }: { fallbackEmail: string }
         {fallbackEmail ? (
           <>
             Please email{" "}
-            <a href={`mailto:${fallbackEmail}`} className="font-semibold text-brand-700 underline">
+            <a href={`mailto:${fallbackEmail}`} className="font-semibold text-brand-600 underline">
               {fallbackEmail}
             </a>{" "}
             instead.
@@ -167,7 +167,7 @@ export default function ContactForm({ fallbackEmail }: { fallbackEmail: string }
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-slate-500">
           We use your details only to reply. See our{" "}
-          <a href="/privacy" className="underline hover:text-brand-700">
+          <a href="/privacy" className="underline hover:text-brand-600">
             privacy policy
           </a>
           .

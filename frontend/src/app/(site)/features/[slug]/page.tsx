@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Guarantee from "@/components/site/Guarantee";
+import { ArrowRight, Check } from "@/components/site/Icons";
+import { ghostButton, primaryButton } from "@/components/site/ui";
 import PageIntro from "@/components/site/PageIntro";
 import { featureBySlug, features } from "@/lib/features";
 import { pageMetadata } from "@/lib/seo";
@@ -37,22 +39,23 @@ export default async function FeaturePage({ params }: Props) {
         lead={feature.intro}
       >
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/login?mode=register" className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700">
+          <Link href="/login?mode=register" className={primaryButton}>
             Get started
+            <ArrowRight />
           </Link>
-          <Link href="/contact" className="rounded-lg px-5 py-2.5 text-sm font-semibold text-slate-800 ring-1 ring-slate-300 hover:bg-slate-100">
+          <Link href="/contact" className={ghostButton}>
             Talk to us
           </Link>
         </div>
       </PageIntro>
 
-      <div className="mx-auto max-w-6xl space-y-16 px-4 py-12 sm:px-6">
+      <div className="mx-auto max-w-[1200px] space-y-16 px-4 py-12 sm:px-6">
         <Image
           src={feature.image}
           alt={feature.imageAlt}
           placeholder="blur"
           sizes="(min-width: 1152px) 1104px, 100vw"
-          className="h-auto w-full rounded-2xl border border-slate-200 shadow-float"
+          className="h-auto w-full rounded-xl border border-slate-200 shadow-card"
         />
 
         <section aria-labelledby="points-title">
@@ -61,8 +64,11 @@ export default async function FeaturePage({ params }: Props) {
           </h2>
           <ul className="mt-6 grid gap-5 md:grid-cols-3">
             {feature.points.map((point) => (
-              <li key={point.title} className="rounded-xl border border-slate-200 bg-surface p-6">
-                <h3 className="font-semibold text-slate-900">{point.title}</h3>
+              <li key={point.title}>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 text-brand-600">
+                  <Check />
+                </span>
+                <h3 className="mt-4 text-lg font-medium text-brand-600">{point.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">{point.body}</p>
               </li>
             ))}
@@ -107,8 +113,8 @@ export default async function FeaturePage({ params }: Props) {
           <ul className="mt-4 grid gap-4 md:grid-cols-3">
             {others.map((f) => (
               <li key={f.slug}>
-                <Link href={`/features/${f.slug}`} className="group block h-full rounded-xl border border-slate-200 bg-surface p-5 hover:border-brand-500">
-                  <span className="font-semibold text-slate-900 group-hover:text-brand-700">{f.name}</span>
+                <Link href={`/features/${f.slug}`} className="group block h-full rounded-xl border border-slate-200 p-5 hover:border-brand-500">
+                  <span className="font-semibold text-slate-900 group-hover:text-brand-600">{f.name}</span>
                   <span className="mt-1 block text-sm text-slate-600">{f.summary}</span>
                 </Link>
               </li>

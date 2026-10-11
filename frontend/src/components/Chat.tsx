@@ -106,7 +106,7 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
 
   return (
     <div className="flex h-full flex-col">
-      <div className={`scroll-thin flex-1 overflow-y-auto px-4 py-6 sm:px-8 ${messages.length === 0 ? "hero-glow" : ""}`}>
+      <div className="scroll-thin flex-1 overflow-y-auto px-4 py-6 sm:px-8">
         <div className="mx-auto max-w-3xl space-y-6" role="log" aria-label="Conversation" aria-live="polite">
           {messages.length > 0 && !busy && (
             <div className="flex justify-end gap-2">
@@ -144,7 +144,7 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
                 </div>
               ) : (
                 <div>
-                  <h2 className="bg-gradient-to-r from-slate-900 to-brand-500 bg-clip-text text-3xl font-semibold text-transparent sm:text-4xl">What would you like to know?</h2>
+                  <h2 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">What would you like to know?</h2>
                   <p className="mt-2 text-sm text-slate-500">
                     Answers are computed on your real data with SQL and Python. Currently focused on <span className="font-medium text-slate-700">{dataset ?? "all datasets"}</span>.
                   </p>
@@ -178,7 +178,7 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
           {messages.map((m, i) =>
             m.role === "user" ? (
               <div key={m.id} className="flex justify-end">
-                <div className="max-w-[85%] rounded-2xl rounded-tr-md bg-gradient-to-br from-brand-600 to-brand-700 px-4 py-2.5 text-[15px] text-white shadow-card">{m.text}</div>
+                <div className="max-w-[85%] rounded-xl rounded-tr-sm bg-brand-600 px-4 py-2.5 text-[15px] text-white">{m.text}</div>
               </div>
             ) : (
               <AssistantMessage key={m.id} message={m} onRetry={() => retry(i)} onSchedule={canEdit ? onSchedule : undefined} />
@@ -188,7 +188,7 @@ export default function Chat({ sessionId, dataset, datasetCount, config, llmRead
         </div>
       </div>
 
-      <div className="bg-gradient-to-t from-slate-50 via-slate-50 to-transparent px-4 pb-4 pt-2 sm:px-8">
+      <div className="border-t border-slate-200 bg-slate-50 px-4 pb-4 pt-3 sm:px-8">
         <div className="mx-auto max-w-3xl">
           {!canEdit && (
             <p className="mb-2 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-700">You have read-only access to this workspace, so asking new questions is disabled.</p>
