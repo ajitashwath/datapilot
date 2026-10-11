@@ -220,10 +220,12 @@ export default function DataExplorer({
               {profile.filename}, {profile.rows.toLocaleString()} rows, {profile.column_count} columns
             </p>
           </div>
-          <div className="flex rounded-lg bg-slate-100 p-1">
+          <div className="flex rounded-lg bg-slate-100 p-1" role="group" aria-label="Dataset views">
             {TABS.map((t) => (
               <button
                 key={t}
+                type="button"
+                aria-pressed={tab === t}
                 onClick={() => setTab(t)}
                 className={`rounded-md px-3 py-1 text-sm font-medium transition ${tab === t ? "bg-surface text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
               >

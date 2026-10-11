@@ -160,7 +160,7 @@ class Schedules:
             f'Your scheduled query "{row["name"]}" {status}.',
             detail,
             "",
-            f"Open DataPilot to see the results: {self.settings.public_url.rstrip('/')}",
+            f"Open DataPilot to see the results: {self.settings.public_url.rstrip('/')}/app",
             "",
             "No data is included in this email on purpose.",
         ]

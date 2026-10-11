@@ -68,6 +68,7 @@ def get_config(request: Request) -> AppConfig:
         email_enabled=s.email_enabled(), email_verification_required=s.require_email_verification and s.email_enabled(),
         two_factor_available=s.auth_mode == "accounts" and bool(s.secret_key),
         sso_name=s.oidc_name if s.auth_mode == "accounts" and request.app.state.sso.enabled() else None,
+        contact_form=bool(s.contact_email) and s.email_enabled(),
     )
 
 

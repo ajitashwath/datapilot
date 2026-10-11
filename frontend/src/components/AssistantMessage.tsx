@@ -6,6 +6,7 @@ import { IssueList } from "./QualityPanel";
 import ResultTable from "./ResultTable";
 import { finalText } from "@/lib/chatState";
 import type { ChatMessage, QualityIssue, Step, ToolResult } from "@/lib/types";
+import BrandMark from "@/components/BrandMark";
 
 type ToolStep = Extract<Step, { kind: "tool" }>;
 
@@ -26,10 +27,10 @@ const TOOL_LABELS: Record<string, string> = {
 function ToolPill({ step }: { step: ToolStep }) {
   const running = !step.result;
   const failed = step.result && !step.result.ok;
-  const style = running ? "bg-brand-50 text-brand-700 ring-brand-100" : failed ? "bg-rose-50 text-rose-700 ring-rose-200" : "bg-emerald-50 text-emerald-700 ring-emerald-200";
+  const style = running ? "bg-brand-50 text-brand-700 ring-brand-100" : failed ? "bg-rose-50 text-rose-700 ring-rose-200" : "bg-surface text-slate-700 ring-slate-200";
   return (
     <span title={step.result?.error ?? undefined} className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${style}`}>
-      {running ? <span className="h-2 w-2 animate-pulse rounded-full bg-brand-500" /> : <span>{failed ? "✕" : "✓"}</span>}
+      {running ? <span className="h-2 w-2 animate-pulse rounded-full bg-brand-500" /> : <span className={failed ? undefined : "text-brand-600"}>{failed ? "✕" : "✓"}</span>}
       {TOOL_LABELS[step.name] ?? step.name}
       {step.durationMs !== undefined && <span>{Math.round(step.durationMs)} ms</span>}
     </span>
@@ -83,7 +84,9 @@ export default function AssistantMessage({ message, onRetry, onSchedule }: { mes
 
   return (
     <div className="flex gap-3" role="article" aria-label="Assistant answer" aria-busy={message.status === "streaming"}>
-      <div aria-hidden="true" className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-sky-500 text-xs font-bold text-white">DP</div>
+      <div aria-hidden="true" className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-100">
+        <BrandMark className="h-3.5 w-auto" />
+      </div>
       <div className="min-w-0 flex-1">
         {toolSteps.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-1.5">

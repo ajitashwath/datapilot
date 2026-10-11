@@ -168,6 +168,15 @@ export const forgotPassword = (email: string) => request<{ sent: boolean }>("/ap
 export const resetPassword = (token: string, password: string) => request<{ reset: boolean }>("/api/auth/reset", json({ token, password }));
 export const verifyEmail = (token: string) => request<{ verified: boolean }>("/api/auth/verify", json({ token }));
 export const resendVerification = (email: string) => request<{ sent: boolean }>("/api/auth/resend-verification", json({ email }));
+export interface ContactMessage {
+  name: string;
+  email: string;
+  topic: "general" | "sales" | "support" | "security" | "privacy";
+  message: string;
+  website: string;
+}
+
+export const sendContact = (body: ContactMessage) => request<{ sent: boolean }>("/api/contact", json(body));
 export const changePassword = (current_password: string, new_password: string) =>
   request<{ changed: boolean }>("/api/auth/password", json({ current_password, new_password }));
 

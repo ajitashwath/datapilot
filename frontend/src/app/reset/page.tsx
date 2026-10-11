@@ -32,7 +32,7 @@ function Reset() {
     return (
       <LinkPage title="Password changed">
         <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-          Your password was changed and other sessions were signed out. <a href="/" className="font-medium underline">Sign in</a> with the new password.
+          Your password was changed and other sessions were signed out. <a href="/login" className="font-medium underline">Sign in</a> with the new password.
         </p>
       </LinkPage>
     );

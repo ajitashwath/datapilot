@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import AccountMenu from "@/components/AccountMenu";
-import AuthGate from "@/components/AuthGate";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import TwoFactorDialog from "@/components/TwoFactorDialog";
 import Chat from "@/components/Chat";
@@ -34,6 +34,7 @@ import {
   waitForJob,
 } from "@/lib/api";
 import type { AppConfig, DatasetDetail, SessionState, UploadResponse, User } from "@/lib/types";
+import BrandMark from "@/components/BrandMark";
 
 const SESSION_KEY = "datapilot-session";
 let storageOwner = "anonymous";
@@ -64,6 +65,7 @@ function largestDataset(datasets: DatasetDetail[]): string | null {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -73,7 +75,6 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState<{ kind: "error" | "info"; text: string } | null>(null);
   const [resetSignal, setResetSignal] = useState(0);
-  const [login, setLogin] = useState<{ needed: boolean; message: string | null }>({ needed: false, message: null });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [scheduleSql, setScheduleSql] = useState<string | null>(null);
@@ -104,7 +105,7 @@ export default function Home() {
         const hadToken = getToken() !== null;
         setToken(null);
         setUser(null);
-        setLogin({ needed: true, message: hadToken ? "Please sign in again." : null });
+        router.replace(hadToken ? "/login?expired=1" : "/login");
         return;
       }
       if (error instanceof ApiError && error.code === "session_not_found") {
@@ -114,7 +115,7 @@ export default function Home() {
       }
       setNotice({ kind: "error", text: error instanceof ApiError ? error.message : "Something went wrong. Please try again." });
     },
-    [startSession],
+    [router, startSession],
   );
 
   const boot = useCallback(
@@ -150,13 +151,13 @@ export default function Home() {
       .then((cfg) => {
         setConfig(cfg);
         if (cfg.auth_required && !getToken()) {
-          setLogin({ needed: true, message: null });
+          router.replace("/login");
           return;
         }
         boot(cfg).catch(fail);
       })
       .catch(fail);
-  }, [boot, fail]);
+  }, [boot, fail, router]);
 
   const refresh = useCallback(async () => {
     if (!sessionId) return;
@@ -287,21 +288,8 @@ export default function Home() {
     setUser(null);
     setSessionId(null);
     setState(null);
-    setLogin({ needed: true, message: null });
+    router.replace("/login");
   }
-
-  function handleSharedToken(token: string) {
-    setToken(token);
-    setLogin({ needed: false, message: null });
-    if (config) boot(config).catch(fail);
-  }
-
-  function handleSignedIn() {
-    setLogin({ needed: false, message: null });
-    if (config) boot(config).catch(fail);
-  }
-
-  if (login.needed && config) return <AuthGate config={config} message={login.message} onSharedToken={handleSharedToken} onSignedIn={handleSignedIn} />;
 
   const selectedProfile = state?.datasets.find((d) => d.profile.name === selected)?.profile ?? null;
   const hasLinkedData = Boolean(state?.datasets.some((d) => d.profile.source?.startsWith("url:")));
@@ -318,9 +306,7 @@ export default function Home() {
         className={`${sidebarOpen ? "fixed inset-y-0 left-0 z-40 flex" : "hidden md:flex"} w-72 max-w-[85vw] shrink-0 flex-col border-r border-slate-200 bg-surface`}
       >
         <div className="flex items-center gap-3 px-4 pb-3 pt-4">
-          <div aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-sky-500 text-sm font-bold text-white shadow-card">
-            DP
-          </div>
+          <BrandMark className="h-8 w-auto" />
           <div>
             <h1 className="text-base font-semibold leading-tight text-slate-900">DataPilot</h1>
             <p className="text-xs text-slate-500">Verified answers from your data</p>

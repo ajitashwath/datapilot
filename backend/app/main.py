@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 
 from app.agent.llm import LLMConfig, LLMProvider, create_provider
 from app.accounts import Accounts
-from app.api import accounts_routes, connector_routes, schedule_routes, sharing_routes
+from app.api import accounts_routes, connector_routes, contact_routes, schedule_routes, sharing_routes
 from app.api.routes import public, router
 from app.config import Settings, get_settings
 from app.errors import UserError
@@ -110,6 +110,7 @@ def create_app(
 
     app.include_router(public)
     app.include_router(accounts_routes.public)
+    app.include_router(contact_routes.public)
     app.include_router(accounts_routes.router)
     app.include_router(sharing_routes.public)
     app.include_router(sharing_routes.router)

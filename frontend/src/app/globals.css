@@ -4,56 +4,56 @@
 
 :root {
   color-scheme: light;
-  --slate-50: 245 247 250;
-  --slate-100: 237 240 245;
-  --slate-200: 224 229 237;
-  --slate-300: 202 210 222;
-  --slate-400: 146 158 177;
-  --slate-500: 98 111 131;
-  --slate-600: 70 83 103;
-  --slate-700: 50 61 80;
-  --slate-800: 30 41 59;
-  --slate-900: 15 23 42;
-  --brand-50: 232 247 245;
-  --brand-100: 200 238 233;
-  --brand-500: 20 150 138;
-  --brand-600: 15 118 110;
-  --brand-700: 17 94 89;
-  --surface: 255 255 255;
-  --ink: 30 41 59;
-  --code: 15 23 42;
-  --code-fg: 226 232 240;
-  --shadow: 15 23 42;
+  --slate-50: 250 246 245;
+  --slate-100: 243 238 237;
+  --slate-200: 229 229 229;
+  --slate-300: 214 210 209;
+  --slate-400: 168 163 163;
+  --slate-500: 107 103 103;
+  --slate-600: 77 75 75;
+  --slate-700: 46 43 43;
+  --slate-800: 26 22 22;
+  --slate-900: 4 1 1;
+  --brand-50: 255 243 239;
+  --brand-100: 255 224 214;
+  --brand-500: 245 57 0;
+  --brand-600: 212 49 0;
+  --brand-700: 168 39 0;
+  --surface: 255 250 250;
+  --ink: 4 1 1;
+  --code: 26 22 22;
+  --code-fg: 243 238 237;
+  --shadow: 0 0 0;
 }
 
 html.dark {
   color-scheme: dark;
-  --slate-50: 10 13 19;
-  --slate-100: 23 28 39;
-  --slate-200: 40 47 62;
-  --slate-300: 60 70 90;
-  --slate-400: 120 132 153;
-  --slate-500: 150 162 180;
-  --slate-600: 172 182 198;
-  --slate-700: 203 211 224;
-  --slate-800: 228 233 241;
-  --slate-900: 245 248 251;
-  --brand-50: 14 44 43;
-  --brand-100: 19 68 65;
-  --brand-500: 45 190 175;
-  --brand-600: 15 118 110;
-  --brand-700: 13 98 92;
-  --surface: 17 21 30;
-  --ink: 51 65 85;
-  --code: 6 9 15;
-  --code-fg: 226 232 240;
+  --slate-50: 12 10 10;
+  --slate-100: 26 22 22;
+  --slate-200: 44 39 38;
+  --slate-300: 66 60 59;
+  --slate-400: 120 113 112;
+  --slate-500: 160 153 152;
+  --slate-600: 184 178 177;
+  --slate-700: 210 205 204;
+  --slate-800: 233 229 228;
+  --slate-900: 250 247 247;
+  --brand-50: 48 18 8;
+  --brand-100: 77 28 12;
+  --brand-500: 255 92 38;
+  --brand-600: 212 49 0;
+  --brand-700: 168 39 0;
+  --surface: 20 17 17;
+  --ink: 233 229 228;
+  --code: 8 6 6;
+  --code-fg: 233 229 228;
   --shadow: 0 0 0;
 }
 
 body {
   @apply bg-slate-50 text-slate-800 antialiased;
-  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-feature-settings: "cv11", "ss01";
+  font-family: var(--font-geist), "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.4;
 }
 
 @layer base {
@@ -73,7 +73,13 @@ body {
 h1,
 h2,
 h3 {
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
+}
+
+code,
+pre,
+kbd {
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 .scroll-thin::-webkit-scrollbar {
@@ -85,16 +91,11 @@ h3 {
   @apply rounded-full bg-slate-300;
 }
 
-.hero-glow {
-  background-image: radial-gradient(60% 80% at 20% 0%, rgb(var(--brand-500) / 0.16), transparent 70%),
-    radial-gradient(50% 70% at 90% 10%, rgb(14 165 233 / 0.12), transparent 70%);
-}
-
 html.dark .text-brand-600,
 html.dark .text-brand-700,
 html.dark .hover\:text-brand-600:hover,
 html.dark .hover\:text-brand-700:hover {
-  color: rgb(94 234 212);
+  color: rgb(255 138 101);
 }
 
 html.dark .bg-emerald-50,
@@ -112,11 +113,6 @@ html.dark .bg-amber-100 {
   background-color: rgb(245 158 11 / 0.14);
 }
 
-html.dark .bg-sky-100,
-html.dark .bg-violet-100 {
-  background-color: rgb(99 102 241 / 0.18);
-}
-
 html.dark .text-emerald-700,
 html.dark .text-emerald-800 {
   color: rgb(110 231 183);
@@ -132,16 +128,10 @@ html.dark .text-amber-800 {
   color: rgb(252 211 77);
 }
 
-html.dark .text-sky-700,
-html.dark .text-violet-700 {
-  color: rgb(165 180 252);
-}
-
 html.dark .ring-emerald-200,
 html.dark .ring-amber-200,
 html.dark .ring-amber-300,
-html.dark .ring-rose-200,
-html.dark .ring-sky-200 {
+html.dark .ring-rose-200 {
   --tw-ring-color: rgb(255 255 255 / 0.12);
 }
 

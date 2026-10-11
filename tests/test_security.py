@@ -98,3 +98,8 @@ def test_metrics_endpoint_exposes_counters(settings):
         assert 'datapilot_http_requests_total{method="POST",path="/api/sessions",status="200"}' in text
         assert 'datapilot_chat_turns_total{outcome="ok"}' in text
         assert "datapilot_sessions_active 1.0" in text
+
+
+def test_malformed_secret_key_fails_with_instructions():
+    with pytest.raises(RuntimeError, match="SECRET_KEY must be a Fernet key"):
+        SecretBox("not-a-fernet-key")

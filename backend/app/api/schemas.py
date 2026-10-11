@@ -81,3 +81,4 @@ class AppConfig(BaseModel):
     email_verification_required: bool = False
     two_factor_available: bool = False
     sso_name: str | None = None
+    contact_form: bool = False

@@ -238,7 +238,7 @@ export default function Sidebar(props: SidebarProps) {
           </div>
           <div className="flex flex-wrap gap-1.5">
             {filters.map(([k, v]) => (
-              <span key={k} className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-medium text-violet-700">
+              <span key={k} className="rounded-full bg-brand-100 px-2.5 py-1 text-xs font-medium text-brand-700">
                 {k}: {v}
               </span>
             ))}
